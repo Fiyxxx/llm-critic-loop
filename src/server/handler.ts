@@ -7,7 +7,12 @@ import {
 } from "../client/critic-client.js";
 import { decodeHistory, encodeHistory } from "../core/history.js";
 import { evaluateConvergence } from "../core/convergence.js";
-import { DEFAULT_CONVERGENCE_CONFIG, type ConvergenceConfig, type Issue } from "../core/types.js";
+import {
+  DEFAULT_CONVERGENCE_CONFIG,
+  type ConvergenceConfig,
+  type Issue,
+  type Verdict,
+} from "../core/types.js";
 import { getPromptForMode } from "../prompts/index.js";
 import type { AdversarialCritiqueInput } from "./tool-schema.js";
 
@@ -16,18 +21,25 @@ export interface HandlerDeps {
   criticFn?: (config: CriticClientConfig, request: CriticRequest) => Promise<CriticResponse>;
 }
 
-export interface ToolResult {
+/**
+ * Declared as a type alias rather than an interface on purpose: the SDK's
+ * CallToolResult carries an `[x: string]: unknown` index signature, and only
+ * type aliases get TypeScript's implicit index signature. As an interface this
+ * would need an `as unknown as CallToolResult` cast at the registerTool call —
+ * which would then hide any real drift from the declared outputSchema.
+ */
+export type ToolResult = {
   isError?: boolean;
   content: Array<{ type: "text"; text: string }>;
   structuredContent: {
-    verdict: string;
+    verdict: Verdict;
     issues: Issue[];
     summary: string;
     round: number;
     done: boolean;
     history: string;
   };
-}
+};
 
 export async function handleAdversarialCritique(
   input: AdversarialCritiqueInput,

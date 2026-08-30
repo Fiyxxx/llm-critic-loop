@@ -2,7 +2,10 @@ import { describe, expect, it, vi } from "vitest";
 import { handleAdversarialCritique } from "../../src/server/handler.js";
 import { CriticError, critique } from "../../src/client/critic-client.js";
 import { decodeHistory, encodeHistory } from "../../src/core/history.js";
-import type { AdversarialCritiqueInput } from "../../src/server/tool-schema.js";
+import {
+  AdversarialCritiqueOutputSchema,
+  type AdversarialCritiqueInput,
+} from "../../src/server/tool-schema.js";
 
 const criticConfig = { baseUrl: "https://example.test/v1", apiKey: "key", model: "test-model" };
 
@@ -42,6 +45,27 @@ describe("handleAdversarialCritique", () => {
 
     expect(result.isError).toBe(true);
     expect(result.structuredContent.verdict).toBe("error");
+  });
+
+  it("returns structuredContent that satisfies the declared MCP outputSchema", async () => {
+    // The SDK runtime-validates successful results against the declared
+    // outputSchema, so any drift between ToolResult and the schema breaks
+    // every real call. Catch that here rather than in production.
+    const criticFn = vi.fn().mockResolvedValue({
+      issues: [
+        {
+          category: "error-handling",
+          severity: "major",
+          description: "no null check on the parsed value",
+          location: "line 3",
+        },
+      ],
+      summary: "One major issue found.",
+    });
+
+    const result = await handleAdversarialCritique(input(), { criticConfig, criticFn });
+
+    expect(() => AdversarialCritiqueOutputSchema.parse(result.structuredContent)).not.toThrow();
   });
 
   it("resolves to verdict 'error' with an intact history blob when the critic returns malformed issue elements", async () => {

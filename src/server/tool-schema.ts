@@ -40,3 +40,31 @@ export const AdversarialCritiqueInputSchema = z.object({
 });
 
 export type AdversarialCritiqueInput = z.infer<typeof AdversarialCritiqueInputSchema>;
+
+/**
+ * Mirrors ToolResult["structuredContent"] exactly. The MCP SDK runtime-validates
+ * a successful tool result against this once it is declared, so the two must stay
+ * in lockstep — a drift here fails every real call, not just malformed ones.
+ */
+export const AdversarialCritiqueOutputSchema = z.object({
+  verdict: z
+    .enum(["approved", "issues_found", "stale", "cap_reached", "error"])
+    .describe("Convergence verdict for this round"),
+  issues: z
+    .array(
+      z.object({
+        category: z.string().describe("Taxonomy category for the issue, e.g. bug or clarity"),
+        severity: z.enum(["minor", "major", "critical"]).describe("How serious the issue is"),
+        description: z.string().describe("What is wrong and why it matters"),
+        location: z
+          .string()
+          .optional()
+          .describe("Where in the artifact the issue is, if the critic identified it"),
+      })
+    )
+    .describe("Issues the critic found this round"),
+  summary: z.string().describe("Human-readable summary of the critique"),
+  round: z.number().describe("Which round this result is for"),
+  done: z.boolean().describe("True when the calling agent should stop looping"),
+  history: z.string().describe("Opaque history blob to pass back unmodified on the next call"),
+});
