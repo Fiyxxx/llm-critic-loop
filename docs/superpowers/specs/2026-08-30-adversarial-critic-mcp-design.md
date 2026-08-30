@@ -106,10 +106,14 @@ Output (`structuredContent`, plus a human-readable `content` text summary):
 1. Zero issues returned → `approved`, `done: true`.
 2. Issues present but all severity `minor` (and round ≥ 2) → `issues_found`
    with `done: true` — host may accept as-is.
-3. Fuzzy-dedup: new issues checked against the history blob's prior-issue
-   digests via word-overlap; if the overlap fraction across new issues meets
-   `staleThreshold`, verdict `stale`, `done: true` — critic is repeating
-   itself, further rounds unproductive.
+3. Fuzzy-dedup: each new issue is checked against the history blob's
+   prior-issue digests via word-overlap. If **every** new issue individually
+   has word-overlap ≥ `staleThreshold` against at least one prior digest —
+   i.e. not a single genuinely new issue was raised this round — verdict
+   `stale`, `done: true`: the critic is repeating itself, further rounds
+   unproductive. One genuinely new issue is enough to keep the loop going;
+   this is a universal (every-issue) test, not an aggregate fraction of how
+   many new issues happened to be duplicates.
 4. `round >= maxRounds` → `cap_reached`, `done: true`, regardless of issue
    state.
 5. Otherwise → `issues_found`, `done: false`, host should revise and call

@@ -33,6 +33,23 @@ Add to your MCP client config, e.g. `claude mcp add`:
 OpenAI, a local model server, or a compatibility proxy in front of another
 provider.
 
+All three `CRITIC_*` variables are **required**. If any is missing or empty,
+the server exits non-zero at startup with an explicit error naming the
+variable, rather than starting up and failing on the first tool call. That
+is deliberate — a misconfigured critic should be obvious immediately, not
+surface later as a mysterious `verdict: "error"`.
+
+## Security note
+
+The critic's `summary` and every issue `description` are relayed verbatim
+into the calling agent's context. The artifact under review may itself be
+untrusted or attacker-influenced text, so a crafted artifact could in
+principle steer the critic's output to influence your agent's subsequent
+reasoning — a prompt-injection path that runs through the critique rather
+than around it. This is inherent to any LLM-review tool and is not
+something this server can fix in code; treat critique output as untrusted
+model output, the same as you would the artifact itself.
+
 ## Why
 
 Single-pass self-review anchors to its own prior reasoning. An independent

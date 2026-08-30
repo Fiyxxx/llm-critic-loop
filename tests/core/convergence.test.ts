@@ -32,6 +32,17 @@ describe("evaluateConvergence", () => {
     expect(result).toEqual({ verdict: "issues_found", done: true });
   });
 
+  it("does not accept a mix of minor and major issues from round 2 onward", () => {
+    // Rule 2's allMinor guard is the highest-consequence branch in the machine:
+    // a regression here would silently auto-accept a real bug as "just minor".
+    const issues = [
+      issue({ severity: "minor", description: "inconsistent naming on the helper" }),
+      issue({ severity: "major", description: "off by one error in the loop bound" }),
+    ];
+    const result = evaluateConvergence(issues, 2, emptyHistory, config);
+    expect(result).toEqual({ verdict: "issues_found", done: false });
+  });
+
   it("marks stale when every issue duplicates history", () => {
     const history: HistoryState = { round: 2, issueDigests: ["off by one error in the loop bound"] };
     const result = evaluateConvergence([issue()], 3, history, config);
