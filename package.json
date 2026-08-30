@@ -1,0 +1,36 @@
+{
+  "name": "adversarial-critic-mcp",
+  "version": "0.1.0",
+  "description": "MCP server: independent, fresh-session adversarial critique of code or docs artifacts, with built-in convergence.",
+  "license": "MIT",
+  "author": "adversarial-critic-mcp contributors",
+  "homepage": "https://github.com/YOUR_ORG/adversarial-critic-mcp",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/YOUR_ORG/adversarial-critic-mcp.git"
+  },
+  "mcpName": "io.github.YOUR_ORG/adversarial-critic-mcp",
+  "type": "module",
+  "bin": {
+    "adversarial-critic-mcp": "dist/server/index.js"
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsc && shx chmod +x dist/server/index.js",
+    "prepare": "npm run build",
+    "test": "vitest run",
+    "watch": "tsc --watch"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.30.0",
+    "zod": "^3.24.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "shx": "^0.4.0",
+    "typescript": "^5.8.0",
+    "vitest": "^4.1.8"
+  }
+}
