@@ -14,7 +14,10 @@ export function decodeHistory(blob: string | undefined): HistoryState {
       typeof parsed === "object" &&
       parsed !== null &&
       typeof parsed.round === "number" &&
-      Array.isArray(parsed.issueDigests)
+      Array.isArray(parsed.issueDigests) &&
+      // Defence in depth: a blob written before issue-element validation
+      // existed could carry a null digest, which would throw in dedup.
+      parsed.issueDigests.every((digest: unknown) => typeof digest === "string")
     ) {
       return parsed as HistoryState;
     }
