@@ -1,0 +1,85 @@
+import {
+  CriticClientConfig,
+  CriticError,
+  CriticRequest,
+  CriticResponse,
+  critique as defaultCritique,
+} from "../client/critic-client.js";
+import { decodeHistory, encodeHistory } from "../core/history.js";
+import { evaluateConvergence } from "../core/convergence.js";
+import { DEFAULT_CONVERGENCE_CONFIG, type ConvergenceConfig, type Issue } from "../core/types.js";
+import { getPromptForMode } from "../prompts/index.js";
+import type { AdversarialCritiqueInput } from "./tool-schema.js";
+
+export interface HandlerDeps {
+  criticConfig: CriticClientConfig;
+  criticFn?: (config: CriticClientConfig, request: CriticRequest) => Promise<CriticResponse>;
+}
+
+export interface ToolResult {
+  isError?: boolean;
+  content: Array<{ type: "text"; text: string }>;
+  structuredContent: {
+    verdict: string;
+    issues: Issue[];
+    summary: string;
+    round: number;
+    done: boolean;
+    history: string;
+  };
+}
+
+export async function handleAdversarialCritique(
+  input: AdversarialCritiqueInput,
+  deps: HandlerDeps
+): Promise<ToolResult> {
+  const criticFn = deps.criticFn ?? defaultCritique;
+  const round = input.round ?? 1;
+  const history = decodeHistory(input.history);
+  const { systemPrompt } = getPromptForMode(input.mode);
+  const config: ConvergenceConfig = {
+    maxRounds: input.config?.maxRounds ?? DEFAULT_CONVERGENCE_CONFIG.maxRounds,
+    staleThreshold: input.config?.staleThreshold ?? DEFAULT_CONVERGENCE_CONFIG.staleThreshold,
+  };
+
+  let response: CriticResponse;
+  try {
+    response = await criticFn(deps.criticConfig, {
+      systemPrompt,
+      artifact: input.artifact,
+      context: input.context,
+    });
+  } catch (error) {
+    const message = error instanceof CriticError ? error.message : String(error);
+    return {
+      isError: true,
+      content: [{ type: "text", text: `Critic call failed: ${message}` }],
+      structuredContent: {
+        verdict: "error",
+        issues: [],
+        summary: message,
+        round,
+        done: false,
+        history: input.history ?? encodeHistory({ round: 0, issueDigests: [] }),
+      },
+    };
+  }
+
+  const { verdict, done } = evaluateConvergence(response.issues, round, history, config);
+  const newHistory = encodeHistory({
+    round,
+    issueDigests: [...history.issueDigests, ...response.issues.map((i) => i.description)],
+  });
+
+  return {
+    content: [{ type: "text", text: response.summary }],
+    structuredContent: {
+      verdict,
+      issues: response.issues,
+      summary: response.summary,
+      round,
+      done,
+      history: newHistory,
+    },
+  };
+}
