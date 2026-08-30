@@ -58,4 +58,30 @@ describe("critique", () => {
     );
     expect(fetchImpl).toHaveBeenCalledTimes(1);
   });
+
+  it("throws CriticError immediately when fetchImpl itself rejects (network/timeout), without retrying", async () => {
+    const fetchImpl = vi.fn().mockRejectedValue(new Error("network timeout"));
+
+    await expect(critique(config, request, fetchImpl as unknown as typeof fetch)).rejects.toThrow(
+      CriticError
+    );
+    expect(fetchImpl).toHaveBeenCalledTimes(1);
+  });
+
+  it("throws CriticError immediately when the response body is not valid JSON, without retrying", async () => {
+    const badJsonResponse = {
+      ok: true,
+      status: 200,
+      statusText: "OK",
+      json: async () => {
+        throw new SyntaxError("Unexpected token in JSON");
+      },
+    } as unknown as Response;
+    const fetchImpl = vi.fn().mockResolvedValue(badJsonResponse);
+
+    await expect(critique(config, request, fetchImpl as unknown as typeof fetch)).rejects.toThrow(
+      CriticError
+    );
+    expect(fetchImpl).toHaveBeenCalledTimes(1);
+  });
 });
