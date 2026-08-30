@@ -63,6 +63,22 @@ function isValidIssue(value: unknown): value is Issue {
   return true;
 }
 
+/**
+ * Rebuild the issue from only the fields we declare, dropping anything extra
+ * the critic invented. The tool's MCP outputSchema is generated with
+ * `additionalProperties: false`, and MCP clients validate structuredContent
+ * against it strictly — so passing a stray field straight through from model
+ * output would fail the call on the client side.
+ */
+function normalizeIssue(issue: Issue): Issue {
+  return {
+    category: issue.category,
+    severity: issue.severity,
+    description: issue.description,
+    ...(issue.location !== undefined ? { location: issue.location } : {}),
+  };
+}
+
 function parseResponse(raw: string): CriticResponse | null {
   try {
     const parsed = JSON.parse(raw);
@@ -72,7 +88,10 @@ function parseResponse(raw: string): CriticResponse | null {
       typeof parsed.summary === "string" &&
       parsed.issues.every(isValidIssue)
     ) {
-      return parsed as CriticResponse;
+      return {
+        issues: (parsed.issues as Issue[]).map(normalizeIssue),
+        summary: parsed.summary as string,
+      };
     }
   } catch {
     // fall through

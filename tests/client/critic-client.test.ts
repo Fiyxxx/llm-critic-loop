@@ -50,6 +50,48 @@ describe("critique", () => {
     expect(fetchImpl).toHaveBeenCalledTimes(2);
   });
 
+  it("strips extra fields the critic invented on an issue", async () => {
+    // MCP clients validate structuredContent against the tool's outputSchema,
+    // which is generated with additionalProperties:false — a stray field
+    // passed straight through from model output fails the whole call.
+    const body = JSON.stringify({
+      issues: [
+        {
+          category: "bug",
+          severity: "major",
+          description: "off by one",
+          confidence: 0.9,
+          suggestedFix: "use <= instead",
+        },
+      ],
+      summary: "One bug found.",
+    });
+    const fetchImpl = vi.fn().mockResolvedValue(fakeResponse(body));
+
+    const result = await critique(config, request, fetchImpl as unknown as typeof fetch);
+
+    expect(result.issues[0]).toEqual({
+      category: "bug",
+      severity: "major",
+      description: "off by one",
+    });
+    expect(Object.keys(result.issues[0])).toEqual(["category", "severity", "description"]);
+  });
+
+  it("preserves an issue's optional location field", async () => {
+    const body = JSON.stringify({
+      issues: [
+        { category: "bug", severity: "minor", description: "off by one", location: "line 12" },
+      ],
+      summary: "One issue.",
+    });
+    const fetchImpl = vi.fn().mockResolvedValue(fakeResponse(body));
+
+    const result = await critique(config, request, fetchImpl as unknown as typeof fetch);
+
+    expect(result.issues[0].location).toBe("line 12");
+  });
+
   it("rejects a response whose issue elements are missing required fields", async () => {
     const body = JSON.stringify({
       issues: [{ issue: "missing null check", level: "high" }],
