@@ -21,6 +21,14 @@ export class CriticError extends Error {}
 
 type FetchLike = typeof fetch;
 
+/**
+ * CRITIC_BASE_URL is arbitrary user config, so a hanging endpoint is a real
+ * failure mode. Without this, the request rides the HTTP stack's multi-minute
+ * default instead of the tool's own error handling. Deliberately hardcoded —
+ * the spec's BYOC config surface is exactly the three CRITIC_* vars.
+ */
+const REQUEST_TIMEOUT_MS = 60_000;
+
 function buildMessages(request: CriticRequest, strict: boolean) {
   const systemPrompt = strict
     ? `${request.systemPrompt}\n\nRespond with ONLY valid JSON matching this shape, no prose, no markdown fences: {"issues":[{"category":string,"severity":"minor"|"major"|"critical","description":string,"location"?:string}],"summary":string}`
@@ -102,6 +110,7 @@ export async function critique(
           messages: buildMessages(request, strict),
           response_format: { type: "json_object" },
         }),
+        signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
       });
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error);

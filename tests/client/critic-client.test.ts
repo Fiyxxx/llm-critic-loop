@@ -124,6 +124,28 @@ describe("critique", () => {
     expect(fetchImpl).toHaveBeenCalledTimes(1);
   });
 
+  it("passes an abort signal on the request so a hanging endpoint times out", async () => {
+    const body = JSON.stringify({ issues: [], summary: "Looks good." });
+    const fetchImpl = vi.fn().mockResolvedValue(fakeResponse(body));
+
+    await critique(config, request, fetchImpl as unknown as typeof fetch);
+
+    const init = fetchImpl.mock.calls[0][1] as RequestInit;
+    expect(init.signal).toBeInstanceOf(AbortSignal);
+    expect(init.signal?.aborted).toBe(false);
+  });
+
+  it("throws CriticError when the request aborts on timeout, without retrying", async () => {
+    const fetchImpl = vi
+      .fn()
+      .mockRejectedValue(new DOMException("The operation was aborted due to timeout", "TimeoutError"));
+
+    await expect(critique(config, request, fetchImpl as unknown as typeof fetch)).rejects.toThrow(
+      CriticError
+    );
+    expect(fetchImpl).toHaveBeenCalledTimes(1);
+  });
+
   it("throws CriticError immediately when the response body is not valid JSON, without retrying", async () => {
     const badJsonResponse = {
       ok: true,
