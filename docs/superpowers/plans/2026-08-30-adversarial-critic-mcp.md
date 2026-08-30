@@ -605,6 +605,32 @@ describe("critique", () => {
     );
     expect(fetchImpl).toHaveBeenCalledTimes(1);
   });
+
+  it("throws CriticError immediately when fetchImpl itself rejects (network/timeout), without retrying", async () => {
+    const fetchImpl = vi.fn().mockRejectedValue(new Error("network timeout"));
+
+    await expect(critique(config, request, fetchImpl as unknown as typeof fetch)).rejects.toThrow(
+      CriticError
+    );
+    expect(fetchImpl).toHaveBeenCalledTimes(1);
+  });
+
+  it("throws CriticError immediately when the response body is not valid JSON, without retrying", async () => {
+    const badJsonResponse = {
+      ok: true,
+      status: 200,
+      statusText: "OK",
+      json: async () => {
+        throw new SyntaxError("Unexpected token in JSON");
+      },
+    } as unknown as Response;
+    const fetchImpl = vi.fn().mockResolvedValue(badJsonResponse);
+
+    await expect(critique(config, request, fetchImpl as unknown as typeof fetch)).rejects.toThrow(
+      CriticError
+    );
+    expect(fetchImpl).toHaveBeenCalledTimes(1);
+  });
 });
 ```
 
@@ -673,24 +699,36 @@ export async function critique(
   fetchImpl: FetchLike = fetch
 ): Promise<CriticResponse> {
   for (const strict of [false, true]) {
-    const res = await fetchImpl(`${config.baseUrl}/chat/completions`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${config.apiKey}`,
-      },
-      body: JSON.stringify({
-        model: config.model,
-        messages: buildMessages(request, strict),
-        response_format: { type: "json_object" },
-      }),
-    });
+    let res: Response;
+    try {
+      res = await fetchImpl(`${config.baseUrl}/chat/completions`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${config.apiKey}`,
+        },
+        body: JSON.stringify({
+          model: config.model,
+          messages: buildMessages(request, strict),
+          response_format: { type: "json_object" },
+        }),
+      });
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      throw new CriticError(`Critic request failed: ${message}`);
+    }
 
     if (!res.ok) {
       throw new CriticError(`Critic request failed: ${res.status} ${res.statusText}`);
     }
 
-    const body = (await res.json()) as { choices: Array<{ message: { content: string } }> };
+    let body: { choices: Array<{ message: { content: string } }> };
+    try {
+      body = (await res.json()) as { choices: Array<{ message: { content: string } }> };
+    } catch {
+      throw new CriticError("Critic response body was not valid JSON");
+    }
+
     const content = body.choices?.[0]?.message?.content ?? "";
     const parsed = parseResponse(content);
     if (parsed) return parsed;
