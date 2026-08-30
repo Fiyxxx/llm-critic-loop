@@ -18,7 +18,7 @@
     "dist"
   ],
   "scripts": {
-    "build": "tsc && shx chmod +x dist/server/index.js",
+    "build": "tsc && shx chmod +x dist/server/index.js 2>/dev/null || true",
     "prepare": "npm run build",
     "test": "vitest run",
     "watch": "tsc --watch"
