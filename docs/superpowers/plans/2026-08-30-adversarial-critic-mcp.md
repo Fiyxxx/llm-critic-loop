@@ -309,8 +309,8 @@ describe("wordOverlap", () => {
   });
 
   it("returns a high fraction for reworded near-duplicates", () => {
-    const a = "the input parameter is never validated for null before use";
-    const b = "input parameter never validated null before being used";
+    const a = "missing null check on the user supplied input value";
+    const b = "missing null check on the user supplied input argument";
     expect(wordOverlap(a, b)).toBeGreaterThanOrEqual(0.8);
   });
 
