@@ -1,4 +1,4 @@
-# adversarial-critic-mcp
+# llm-critic-loop
 
 Independent, fresh-session adversarial critique of a code or docs artifact,
 exposed as one MCP tool: `adversarial_critique`. Your own agent stays the
@@ -8,7 +8,7 @@ it finds, and stop when it tells you to.
 ## Install
 
 ```bash
-npx -y adversarial-critic-mcp
+npx -y llm-critic-loop
 ```
 
 Add to your MCP client config, e.g. `claude mcp add`:
@@ -18,7 +18,7 @@ Add to your MCP client config, e.g. `claude mcp add`:
   "mcpServers": {
     "adversarial-critic": {
       "command": "npx",
-      "args": ["-y", "adversarial-critic-mcp"],
+      "args": ["-y", "llm-critic-loop"],
       "env": {
         "CRITIC_BASE_URL": "https://api.openai.com/v1",
         "CRITIC_API_KEY": "sk-...",

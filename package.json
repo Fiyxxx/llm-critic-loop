@@ -1,18 +1,18 @@
 {
-  "name": "adversarial-critic-mcp",
+  "name": "llm-critic-loop",
   "version": "0.1.0",
   "description": "MCP server: independent, fresh-session adversarial critique of code or docs artifacts, with built-in convergence.",
   "license": "MIT",
-  "author": "adversarial-critic-mcp contributors",
-  "homepage": "https://github.com/YOUR_ORG/adversarial-critic-mcp",
+  "author": "llm-critic-loop contributors",
+  "homepage": "https://github.com/Fiyxxx/llm-critic-loop",
   "repository": {
     "type": "git",
-    "url": "https://github.com/YOUR_ORG/adversarial-critic-mcp.git"
+    "url": "https://github.com/Fiyxxx/llm-critic-loop.git"
   },
-  "mcpName": "io.github.YOUR_ORG/adversarial-critic-mcp",
+  "mcpName": "io.github.Fiyxxx/llm-critic-loop",
   "type": "module",
   "bin": {
-    "adversarial-critic-mcp": "dist/server/index.js"
+    "llm-critic-loop": "dist/server/index.js"
   },
   "files": [
     "dist"

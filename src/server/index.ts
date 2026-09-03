@@ -11,7 +11,7 @@ import { handleAdversarialCritique } from "./handler.js";
 const criticConfig = loadCriticConfig();
 
 const server = new McpServer({
-  name: "adversarial-critic-mcp",
+  name: "llm-critic-loop",
   version: "0.1.0",
 });
 
