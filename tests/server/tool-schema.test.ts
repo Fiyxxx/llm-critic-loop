@@ -11,14 +11,12 @@ describe("AdversarialCritiqueInputSchema", () => {
   });
 
   it("rejects an empty artifact", () => {
-    expect(() =>
-      AdversarialCritiqueInputSchema.parse({ artifact: "", mode: "code" })
-    ).toThrow();
+    expect(() => AdversarialCritiqueInputSchema.parse({ artifact: "", mode: "code" })).toThrow();
   });
 
   it("rejects an invalid mode", () => {
     expect(() =>
-      AdversarialCritiqueInputSchema.parse({ artifact: "text", mode: "spreadsheet" })
+      AdversarialCritiqueInputSchema.parse({ artifact: "text", mode: "spreadsheet" }),
     ).toThrow();
   });
 

@@ -7,12 +7,7 @@ export interface Issue {
   location?: string;
 }
 
-export type Verdict =
-  | "approved"
-  | "issues_found"
-  | "stale"
-  | "cap_reached"
-  | "error";
+export type Verdict = "approved" | "issues_found" | "stale" | "cap_reached" | "error";
 
 export interface ConvergenceConfig {
   maxRounds: number;

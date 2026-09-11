@@ -60,7 +60,7 @@ export const AdversarialCritiqueOutputSchema = z.object({
           .string()
           .optional()
           .describe("Where in the artifact the issue is, if the critic identified it"),
-      })
+      }),
     )
     .describe("Issues the critic found this round"),
   summary: z.string().describe("Human-readable summary of the critique"),

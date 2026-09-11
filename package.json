@@ -2,15 +2,29 @@
   "name": "llm-critic-loop",
   "version": "0.1.0",
   "description": "MCP server: independent, fresh-session adversarial critique of code or docs artifacts, with built-in convergence.",
+  "keywords": [
+    "mcp",
+    "model-context-protocol",
+    "llm",
+    "code-review",
+    "agent",
+    "ai"
+  ],
   "license": "MIT",
   "author": "llm-critic-loop contributors",
   "homepage": "https://github.com/Fiyxxx/llm-critic-loop",
+  "bugs": {
+    "url": "https://github.com/Fiyxxx/llm-critic-loop/issues"
+  },
   "repository": {
     "type": "git",
     "url": "https://github.com/Fiyxxx/llm-critic-loop.git"
   },
   "mcpName": "io.github.Fiyxxx/llm-critic-loop",
   "type": "module",
+  "engines": {
+    "node": ">=18.17.0"
+  },
   "bin": {
     "llm-critic-loop": "dist/server/index.js"
   },
@@ -21,16 +35,26 @@
     "build": "tsc && (shx chmod +x dist/server/index.js || true)",
     "prepare": "npm run build",
     "test": "vitest run",
-    "watch": "tsc --watch"
+    "test:coverage": "vitest run --coverage",
+    "watch": "tsc --watch",
+    "lint": "eslint .",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "typecheck": "tsc --noEmit"
   },
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.30.0",
     "zod": "^3.25.0"
   },
   "devDependencies": {
+    "@eslint/js": "^10.0.1",
     "@types/node": "^22.0.0",
+    "@vitest/coverage-v8": "^4.1.11",
+    "eslint": "^10.10.0",
+    "prettier": "^3.9.6",
     "shx": "^0.4.0",
     "typescript": "^5.8.0",
+    "typescript-eslint": "^8.70.0",
     "vitest": "^4.1.8"
   }
 }

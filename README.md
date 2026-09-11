@@ -1,9 +1,17 @@
 # llm-critic-loop
 
+[![CI](https://github.com/Fiyxxx/llm-critic-loop/actions/workflows/ci.yml/badge.svg)](https://github.com/Fiyxxx/llm-critic-loop/actions/workflows/ci.yml)
+[![npm](https://img.shields.io/npm/v/llm-critic-loop.svg)](https://www.npmjs.com/package/llm-critic-loop)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+
 Independent, fresh-session adversarial critique of a code or docs artifact,
 exposed as one MCP tool: `adversarial_critique`. Your own agent stays the
 creator — this tool is the critic. Call it each round, revise based on what
 it finds, and stop when it tells you to.
+
+## Requirements
+
+Node.js >= 18.17.
 
 ## Install
 
@@ -73,9 +81,22 @@ Stop calling once `done` is `true`.
 
 ```bash
 npm install
+npm run lint
 npm test
 npm run build
 ```
+
+See [CONTRIBUTING.md](CONTRIBUTING.md) for the full workflow.
+
+## Contributing
+
+Contributions welcome — see [CONTRIBUTING.md](CONTRIBUTING.md). This project
+follows the [Contributor Covenant](CODE_OF_CONDUCT.md). Found a security
+issue? See [SECURITY.md](SECURITY.md) instead of opening a public issue.
+
+## Changelog
+
+See [CHANGELOG.md](CHANGELOG.md).
 
 ## License
 

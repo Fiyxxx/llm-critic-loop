@@ -4,7 +4,10 @@ import type { HistoryState } from "../../src/core/types.js";
 
 describe("history codec", () => {
   it("round-trips a non-empty state", () => {
-    const state: HistoryState = { round: 3, issueDigests: ["missing null check", "sql injection risk"] };
+    const state: HistoryState = {
+      round: 3,
+      issueDigests: ["missing null check", "sql injection risk"],
+    };
     const blob = encodeHistory(state);
     expect(decodeHistory(blob)).toEqual(state);
   });
@@ -20,7 +23,7 @@ describe("history codec", () => {
   it("falls back to empty history when issueDigests holds a non-string element", () => {
     const poisoned = Buffer.from(
       JSON.stringify({ round: 1, issueDigests: [null] }),
-      "utf-8"
+      "utf-8",
     ).toString("base64");
     expect(decodeHistory(poisoned)).toEqual({ round: 0, issueDigests: [] });
   });
@@ -28,7 +31,7 @@ describe("history codec", () => {
   it("falls back to empty history when issueDigests mixes strings and non-strings", () => {
     const poisoned = Buffer.from(
       JSON.stringify({ round: 2, issueDigests: ["a real digest", 42] }),
-      "utf-8"
+      "utf-8",
     ).toString("base64");
     expect(decodeHistory(poisoned)).toEqual({ round: 0, issueDigests: [] });
   });

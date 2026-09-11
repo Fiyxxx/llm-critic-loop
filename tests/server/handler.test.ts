@@ -103,7 +103,7 @@ describe("handleAdversarialCritique", () => {
   it("recovers from a poisoned history blob rather than throwing on the next round", async () => {
     const poisoned = Buffer.from(
       JSON.stringify({ round: 1, issueDigests: [null] }),
-      "utf-8"
+      "utf-8",
     ).toString("base64");
     const criticFn = vi.fn().mockResolvedValue({
       issues: [{ category: "bug", severity: "major", description: "a real issue" }],
@@ -126,10 +126,10 @@ describe("handleAdversarialCritique", () => {
       summary: "Found one new issue.",
     });
 
-    const result = await handleAdversarialCritique(
-      input({ round: 2, history: priorHistory }),
-      { criticConfig, criticFn }
-    );
+    const result = await handleAdversarialCritique(input({ round: 2, history: priorHistory }), {
+      criticConfig,
+      criticFn,
+    });
 
     expect(result.structuredContent.history).not.toBe(priorHistory);
     expect(result.structuredContent.verdict).toBe("issues_found");

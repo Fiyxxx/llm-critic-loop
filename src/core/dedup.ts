@@ -4,7 +4,7 @@ function tokenize(text: string): Set<string> {
       .toLowerCase()
       .replace(/[^a-z0-9\s]/g, " ")
       .split(/\s+/)
-      .filter(Boolean)
+      .filter(Boolean),
   );
 }
 
@@ -28,7 +28,7 @@ export function wordOverlap(a: string, b: string): number {
 export function isDuplicate(
   description: string,
   priorDigests: string[],
-  threshold: number
+  threshold: number,
 ): boolean {
   return priorDigests.some((digest) => wordOverlap(description, digest) >= threshold);
 }

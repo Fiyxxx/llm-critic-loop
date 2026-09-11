@@ -111,7 +111,7 @@ function snippet(content: string): string {
 export async function critique(
   config: CriticClientConfig,
   request: CriticRequest,
-  fetchImpl: FetchLike = fetch
+  fetchImpl: FetchLike = fetch,
 ): Promise<CriticResponse> {
   let lastContent = "";
 
@@ -154,6 +154,6 @@ export async function critique(
   }
 
   throw new CriticError(
-    `Critic returned non-conforming output after retry. Last response content: ${snippet(lastContent)}`
+    `Critic returned non-conforming output after retry. Last response content: ${snippet(lastContent)}`,
   );
 }

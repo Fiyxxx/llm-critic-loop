@@ -43,7 +43,7 @@ export type ToolResult = {
 
 export async function handleAdversarialCritique(
   input: AdversarialCritiqueInput,
-  deps: HandlerDeps
+  deps: HandlerDeps,
 ): Promise<ToolResult> {
   const criticFn = deps.criticFn ?? defaultCritique;
   const round = input.round ?? 1;

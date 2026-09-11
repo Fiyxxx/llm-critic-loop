@@ -13,7 +13,7 @@ export function evaluateConvergence(
   issues: Issue[],
   round: number,
   history: HistoryState,
-  config: ConvergenceConfig
+  config: ConvergenceConfig,
 ): ConvergenceResult {
   if (issues.length === 0) {
     return { verdict: "approved", done: true };
@@ -25,7 +25,7 @@ export function evaluateConvergence(
   }
 
   const allStale = issues.every((issue) =>
-    isDuplicate(issue.description, history.issueDigests, config.staleThreshold)
+    isDuplicate(issue.description, history.issueDigests, config.staleThreshold),
   );
   if (allStale) {
     return { verdict: "stale", done: true };

@@ -2,7 +2,11 @@ import { describe, expect, it, vi } from "vitest";
 import { CriticError, critique } from "../../src/client/critic-client.js";
 
 const config = { baseUrl: "https://example.test/v1", apiKey: "key", model: "test-model" };
-const request = { systemPrompt: "You are a critic.", artifact: "const x = 1", context: "a test file" };
+const request = {
+  systemPrompt: "You are a critic.",
+  artifact: "const x = 1",
+  context: "a test file",
+};
 
 function fakeResponse(content: string, ok = true, status = 200) {
   return {
@@ -45,7 +49,7 @@ describe("critique", () => {
     const fetchImpl = vi.fn().mockResolvedValue(fakeResponse("still not json"));
 
     await expect(critique(config, request, fetchImpl as unknown as typeof fetch)).rejects.toThrow(
-      CriticError
+      CriticError,
     );
     expect(fetchImpl).toHaveBeenCalledTimes(2);
   });
@@ -100,7 +104,7 @@ describe("critique", () => {
     const fetchImpl = vi.fn().mockResolvedValue(fakeResponse(body));
 
     await expect(critique(config, request, fetchImpl as unknown as typeof fetch)).rejects.toThrow(
-      CriticError
+      CriticError,
     );
     expect(fetchImpl).toHaveBeenCalledTimes(2);
   });
@@ -113,7 +117,7 @@ describe("critique", () => {
     const fetchImpl = vi.fn().mockResolvedValue(fakeResponse(body));
 
     await expect(critique(config, request, fetchImpl as unknown as typeof fetch)).rejects.toThrow(
-      CriticError
+      CriticError,
     );
   });
 
@@ -127,7 +131,7 @@ describe("critique", () => {
     const fetchImpl = vi.fn().mockResolvedValue(fakeResponse(body));
 
     await expect(critique(config, request, fetchImpl as unknown as typeof fetch)).rejects.toThrow(
-      CriticError
+      CriticError,
     );
   });
 
@@ -135,7 +139,7 @@ describe("critique", () => {
     const fetchImpl = vi.fn().mockResolvedValue(fakeResponse("<html>gateway error</html>"));
 
     await expect(critique(config, request, fetchImpl as unknown as typeof fetch)).rejects.toThrow(
-      /<html>gateway error<\/html>/
+      /<html>gateway error<\/html>/,
     );
   });
 
@@ -143,16 +147,16 @@ describe("critique", () => {
     const long = "x".repeat(5000);
     const fetchImpl = vi.fn().mockResolvedValue(fakeResponse(long));
 
-    await expect(
-      critique(config, request, fetchImpl as unknown as typeof fetch)
-    ).rejects.toThrow(/x{200}\.\.\.$/);
+    await expect(critique(config, request, fetchImpl as unknown as typeof fetch)).rejects.toThrow(
+      /x{200}\.\.\.$/,
+    );
   });
 
   it("throws CriticError immediately on an HTTP failure, without retrying", async () => {
     const fetchImpl = vi.fn().mockResolvedValue(fakeResponse("", false, 500));
 
     await expect(critique(config, request, fetchImpl as unknown as typeof fetch)).rejects.toThrow(
-      CriticError
+      CriticError,
     );
     expect(fetchImpl).toHaveBeenCalledTimes(1);
   });
@@ -161,7 +165,7 @@ describe("critique", () => {
     const fetchImpl = vi.fn().mockRejectedValue(new Error("network timeout"));
 
     await expect(critique(config, request, fetchImpl as unknown as typeof fetch)).rejects.toThrow(
-      CriticError
+      CriticError,
     );
     expect(fetchImpl).toHaveBeenCalledTimes(1);
   });
@@ -180,10 +184,12 @@ describe("critique", () => {
   it("throws CriticError when the request aborts on timeout, without retrying", async () => {
     const fetchImpl = vi
       .fn()
-      .mockRejectedValue(new DOMException("The operation was aborted due to timeout", "TimeoutError"));
+      .mockRejectedValue(
+        new DOMException("The operation was aborted due to timeout", "TimeoutError"),
+      );
 
     await expect(critique(config, request, fetchImpl as unknown as typeof fetch)).rejects.toThrow(
-      CriticError
+      CriticError,
     );
     expect(fetchImpl).toHaveBeenCalledTimes(1);
   });
@@ -200,7 +206,7 @@ describe("critique", () => {
     const fetchImpl = vi.fn().mockResolvedValue(badJsonResponse);
 
     await expect(critique(config, request, fetchImpl as unknown as typeof fetch)).rejects.toThrow(
-      CriticError
+      CriticError,
     );
     expect(fetchImpl).toHaveBeenCalledTimes(1);
   });

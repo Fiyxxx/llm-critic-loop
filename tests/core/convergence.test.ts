@@ -44,13 +44,19 @@ describe("evaluateConvergence", () => {
   });
 
   it("marks stale when every issue duplicates history", () => {
-    const history: HistoryState = { round: 2, issueDigests: ["off by one error in the loop bound"] };
+    const history: HistoryState = {
+      round: 2,
+      issueDigests: ["off by one error in the loop bound"],
+    };
     const result = evaluateConvergence([issue()], 3, history, config);
     expect(result).toEqual({ verdict: "stale", done: true });
   });
 
   it("does not mark stale when at least one issue is genuinely new", () => {
-    const history: HistoryState = { round: 2, issueDigests: ["off by one error in the loop bound"] };
+    const history: HistoryState = {
+      round: 2,
+      issueDigests: ["off by one error in the loop bound"],
+    };
     const issues = [issue(), issue({ description: "race condition on the shared counter" })];
     const result = evaluateConvergence(issues, 3, history, config);
     expect(result).toEqual({ verdict: "issues_found", done: false });
