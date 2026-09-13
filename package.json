@@ -1,14 +1,17 @@
 {
   "name": "llm-critic-loop",
   "version": "0.1.0",
-  "description": "MCP server: independent, fresh-session adversarial critique of code or docs artifacts, with built-in convergence.",
+  "description": "Give your coding agent an adversarial critic: an independent, fresh-session MCP reviewer for code and docs, with built-in convergence and any model you bring.",
   "keywords": [
     "mcp",
     "model-context-protocol",
     "llm",
     "code-review",
     "agent",
-    "ai"
+    "agentic-ai",
+    "ai",
+    "openai",
+    "claude"
   ],
   "license": "MIT",
   "author": "llm-critic-loop contributors",

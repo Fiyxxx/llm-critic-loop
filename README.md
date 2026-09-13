@@ -4,10 +4,27 @@
 [![npm](https://img.shields.io/npm/v/llm-critic-loop.svg)](https://www.npmjs.com/package/llm-critic-loop)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
-Independent, fresh-session adversarial critique of a code or docs artifact,
-exposed as one MCP tool: `critic`. Your own agent stays the creator — this
-tool is the critic. Call it each round, revise based on what it finds, and
-stop when it tells you to.
+**Your coding agent is a bad judge of its own work.** Ask any model to
+review the code it just wrote and it anchors on its own prior reasoning —
+a well-documented self-evaluation bias — and waves through its own mistakes.
+`llm-critic-loop` fixes that by giving it an adversarial critic: a second
+model, in a fresh session with no memory of how the artifact was written,
+whose only job is to find what's wrong with it.
+
+One MCP tool, `critic`. Your agent stays the creator. Call it each round,
+revise based on what it finds, and stop the moment it tells you to —
+built-in convergence detection catches both "actually done" and "just
+repeating itself," so the loop can't run forever.
+
+- 🔍 **Independent, fresh-session review** — no shared context with the
+  agent that wrote the artifact, so it can't rationalize its own blind spots
+- 🔌 **Bring your own critic** — any OpenAI-compatible chat-completions
+  endpoint: OpenAI, Anthropic, Gemini, xAI, Groq, Mistral, DeepSeek, or a
+  local model
+- 🛑 **Built-in convergence** — approve / issues-found / stale-loop /
+  round-cap verdicts, so your agent knows exactly when to stop
+- ⚡ **One-command setup** — `npx llm-critic-loop init` walks you through
+  provider, model, and key, then wires it into your MCP client for you
 
 ## Requirements
 
@@ -69,25 +86,26 @@ variable, rather than starting up and failing on the first tool call. That
 is deliberate — a misconfigured critic should be obvious immediately, not
 surface later as a mysterious `verdict: "error"`.
 
-## Security note
+## How it stays fresh — and knows when to stop
 
-The critic's `summary` and every issue `description` are relayed verbatim
-into the calling agent's context. The artifact under review may itself be
-untrusted or attacker-influenced text, so a crafted artifact could in
-principle steer the critic's output to influence your agent's subsequent
-reasoning — a prompt-injection path that runs through the critique rather
-than around it. This is inherent to any LLM-review tool and is not
-something this server can fix in code; treat critique output as untrusted
-model output, the same as you would the artifact itself.
+The server itself holds no state between calls. Every response carries an
+opaque `history` blob; you pass it back on the next round, and that's the
+entire memory of the loop. Each critique still runs in a brand-new model
+session — no chat history, no memory of its own prior verdicts — so it
+never anchors on a judgment it already made.
 
-## Why
+Convergence is decided from that history, not by asking the critic to
+grade itself:
 
-Single-pass self-review anchors to its own prior reasoning. An independent
-critic with a fresh context catches more — but only if it stays fresh each
-round and the loop knows when to actually stop. This tool is stateless: it
-returns an opaque history blob each call, you pass it back next round, and
-it uses fuzzy duplicate detection to tell you when the critic has started
-repeating itself instead of finding anything new.
+- **`approved`** — this round found zero issues
+- **`issues_found`** — real, new problems to go fix
+- **`stale`** — the critic's issues this round overlap the prior round's
+  above a word-fraction threshold (default 0.8): it's repeating itself,
+  not finding anything new
+- **`cap_reached`** — hit `maxRounds` (default 10) without converging
+
+`done` is `true` on every verdict except `issues_found`. Stop calling the
+moment you see it.
 
 ## Tool: `critic`
 
@@ -98,6 +116,17 @@ repeating itself instead of finding anything new.
 **Output:** `verdict` (`approved` / `issues_found` / `stale` /
 `cap_reached` / `error`), `issues[]`, `summary`, `round`, `done`, `history`.
 Stop calling once `done` is `true`.
+
+## Security note
+
+The critic's `summary` and every issue `description` are relayed verbatim
+into the calling agent's context. The artifact under review may itself be
+untrusted or attacker-influenced text, so a crafted artifact could in
+principle steer the critic's output to influence your agent's subsequent
+reasoning — a prompt-injection path that runs through the critique rather
+than around it. This is inherent to any LLM-review tool and is not
+something this server can fix in code; treat critique output as untrusted
+model output, the same as you would the artifact itself.
 
 ## Development
 
