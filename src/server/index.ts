@@ -7,11 +7,18 @@ import { handleCritic } from "./handler.js";
 import { getPackageVersion } from "./version.js";
 
 if (process.argv[2] === "init") {
-  const { runInit, formatInitResult } = await import("../cli/init.js");
+  const cli = await import("../cli/init.js");
+  if (!cli.nodeSupportsInit(process.versions.node)) {
+    console.error(
+      `llm-critic-loop init requires Node.js >= 20.12.0 (you have ${process.versions.node}).\n` +
+        "The critic MCP server itself still runs on Node >= 18.17 -- see the README for manual setup.",
+    );
+    process.exit(1);
+  }
   const clack = await import("@clack/prompts");
   clack.intro("llm-critic-loop setup");
-  const result = await runInit();
-  console.log(formatInitResult(result));
+  const result = await cli.runInit();
+  console.log(cli.formatInitResult(result));
   process.exit(result.ran && !result.succeeded ? 1 : 0);
 }
 

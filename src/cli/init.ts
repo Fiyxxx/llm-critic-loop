@@ -1,8 +1,21 @@
 import { spawnSync } from "node:child_process";
-import * as clack from "@clack/prompts";
 import { PROVIDERS, type ProviderPreset } from "./providers.js";
 
 export type Scope = "local" | "user";
+
+/**
+ * @clack/prompts itself requires Node >= 20.12 (it imports node:util's
+ * styleText). The critic MCP server has no such requirement, so this is
+ * checked lazily, only when the interactive wizard actually runs, rather
+ * than raised as the whole package's engines floor.
+ */
+const MIN_NODE_MAJOR = 20;
+const MIN_NODE_MINOR = 12;
+
+export function nodeSupportsInit(nodeVersion: string): boolean {
+  const [major, minor] = nodeVersion.split(".").map(Number);
+  return major > MIN_NODE_MAJOR || (major === MIN_NODE_MAJOR && minor >= MIN_NODE_MINOR);
+}
 
 export const OTHER_MODEL_OPTION = "Other (type your own)";
 
@@ -74,7 +87,7 @@ function defaultRunCommand(cmd: string, args: string[]): CommandResult {
 }
 
 export async function runInit(deps: InitDeps = {}): Promise<InitResult> {
-  const prompter = deps.prompter ?? getDefaultPrompter();
+  const prompter = deps.prompter ?? (await getDefaultPrompter());
   const runCommand = deps.runCommand ?? defaultRunCommand;
 
   const provider = await prompter.selectProvider(PROVIDERS);
@@ -132,15 +145,25 @@ export function formatInitResult(result: InitResult): string {
   ].join("\n");
 }
 
-function unwrap<T>(value: T | symbol): T {
-  if (clack.isCancel(value)) {
-    clack.cancel("Setup cancelled.");
-    process.exit(0);
+async function getDefaultPrompter(): Promise<Prompter> {
+  if (!nodeSupportsInit(process.versions.node)) {
+    throw new Error(
+      `llm-critic-loop init requires Node.js >= ${MIN_NODE_MAJOR}.${MIN_NODE_MINOR}.0 ` +
+        `(you have ${process.versions.node}). The critic MCP server itself still runs on ` +
+        "Node >= 18.17 -- see the README for manual setup instead.",
+    );
   }
-  return value as T;
-}
 
-function getDefaultPrompter(): Prompter {
+  const clack = await import("@clack/prompts");
+
+  function unwrap<T>(value: T | symbol): T {
+    if (clack.isCancel(value)) {
+      clack.cancel("Setup cancelled.");
+      process.exit(0);
+    }
+    return value as T;
+  }
+
   return {
     async selectProvider(providers) {
       const id = unwrap(

@@ -11,7 +11,10 @@ stop when it tells you to.
 
 ## Requirements
 
-Node.js >= 18.17.
+Node.js >= 18.17 to run the MCP server. `npx llm-critic-loop init` (the
+setup wizard) additionally requires Node.js >= 20.12, since its interactive
+prompts library needs it; on an older Node it prints a clear error and you
+can fall back to the manual setup below.
 
 ## Install
 

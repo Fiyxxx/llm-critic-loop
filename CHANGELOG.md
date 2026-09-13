@@ -24,6 +24,13 @@ adheres to [Semantic Versioning](https://semver.org/) once it reaches 1.0.
 
 - Server-reported version now reads from `package.json` at startup instead of
   a separately hardcoded string, so the two can no longer drift.
+- `init` on Node < 20.12 now prints a clear error instead of crashing with a
+  raw `SyntaxError` (its prompts library requires Node >= 20.12; the MCP
+  server itself is unaffected and still runs on Node >= 18.17).
+- Downgraded `vitest`/`@vitest/coverage-v8` from 4.x to 3.2.7: vitest 4's
+  Vite 8 dependency pulls in `rolldown`, which needs Node >= 20.12 and broke
+  the whole test suite on Node 18 in CI. vitest 3.2.7 genuinely supports
+  Node 18, matching this project's documented engines range.
 
 ## [0.1.0] - 2026-09-11
 
