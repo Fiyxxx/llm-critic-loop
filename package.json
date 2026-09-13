@@ -43,6 +43,7 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
+    "@clack/prompts": "^1.8.0",
     "@modelcontextprotocol/sdk": "^1.30.0",
     "zod": "^3.25.0"
   },

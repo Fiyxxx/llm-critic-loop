@@ -5,9 +5,9 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
 Independent, fresh-session adversarial critique of a code or docs artifact,
-exposed as one MCP tool: `adversarial_critique`. Your own agent stays the
-creator — this tool is the critic. Call it each round, revise based on what
-it finds, and stop when it tells you to.
+exposed as one MCP tool: `critic`. Your own agent stays the creator — this
+tool is the critic. Call it each round, revise based on what it finds, and
+stop when it tells you to.
 
 ## Requirements
 
@@ -16,15 +16,34 @@ Node.js >= 18.17.
 ## Install
 
 ```bash
-npx -y llm-critic-loop
+npx -y llm-critic-loop init
 ```
 
-Add to your MCP client config, e.g. `claude mcp add`:
+Interactive setup: pick a provider (OpenAI, Anthropic, Gemini, xAI, Groq,
+Mistral, DeepSeek, a local model server, or a custom endpoint), pick a model
+from a curated list (or type your own), enter your API key, and choose
+whether to add it for this project or all your projects. If the `claude` CLI
+is on your `PATH`, it runs `claude mcp add` for you; otherwise it prints the
+exact command to paste. Nothing is written to disk — the key only ever goes
+into the command that registers the server.
+
+### Manual setup
+
+Prefer to do it by hand, or using a different MCP client? Add it with the
+Claude Code CLI:
+
+```bash
+claude mcp add critic -e CRITIC_BASE_URL=https://api.openai.com/v1 \
+  -e CRITIC_API_KEY=sk-... -e CRITIC_MODEL=gpt-4o \
+  -- npx -y llm-critic-loop
+```
+
+Or add it directly to your MCP client config:
 
 ```json
 {
   "mcpServers": {
-    "adversarial-critic": {
+    "critic": {
       "command": "npx",
       "args": ["-y", "llm-critic-loop"],
       "env": {
@@ -67,7 +86,7 @@ returns an opaque history blob each call, you pass it back next round, and
 it uses fuzzy duplicate detection to tell you when the critic has started
 repeating itself instead of finding anything new.
 
-## Tool: `adversarial_critique`
+## Tool: `critic`
 
 **Input:** `artifact`, `mode` (`"code"` or `"docs"`), optional `context`,
 `round` (default 1), `history` (omit on round 1), optional `config`

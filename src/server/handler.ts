@@ -14,7 +14,7 @@ import {
   type Verdict,
 } from "../core/types.js";
 import { getPromptForMode } from "../prompts/index.js";
-import type { AdversarialCritiqueInput } from "./tool-schema.js";
+import type { CriticInput } from "./tool-schema.js";
 
 export interface HandlerDeps {
   criticConfig: CriticClientConfig;
@@ -41,10 +41,7 @@ export type ToolResult = {
   };
 };
 
-export async function handleAdversarialCritique(
-  input: AdversarialCritiqueInput,
-  deps: HandlerDeps,
-): Promise<ToolResult> {
+export async function handleCritic(input: CriticInput, deps: HandlerDeps): Promise<ToolResult> {
   const criticFn = deps.criticFn ?? defaultCritique;
   const round = input.round ?? 1;
   const history = decodeHistory(input.history);

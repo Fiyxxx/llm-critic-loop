@@ -8,10 +8,17 @@ adheres to [Semantic Versioning](https://semver.org/) once it reaches 1.0.
 
 ### Added
 
+- `npx llm-critic-loop init`: interactive setup wizard (provider, model,
+  API key, scope) that runs `claude mcp add` for you, or prints the
+  equivalent command if the `claude` CLI isn't on `PATH`.
 - CI workflow (lint, format check, build, test on Node 18/20/22).
 - ESLint + Prettier tooling (`npm run lint`, `npm run format`).
 - Test coverage reporting (`npm run test:coverage`).
 - CONTRIBUTING.md, SECURITY.md, CODE_OF_CONDUCT.md, issue/PR templates.
+
+### Changed
+
+- MCP tool renamed from `adversarial_critique` to `critic`.
 
 ### Fixed
 

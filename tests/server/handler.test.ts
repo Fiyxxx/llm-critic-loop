@@ -1,23 +1,20 @@
 import { describe, expect, it, vi } from "vitest";
-import { handleAdversarialCritique } from "../../src/server/handler.js";
+import { handleCritic } from "../../src/server/handler.js";
 import { CriticError, critique } from "../../src/client/critic-client.js";
 import { decodeHistory, encodeHistory } from "../../src/core/history.js";
-import {
-  AdversarialCritiqueOutputSchema,
-  type AdversarialCritiqueInput,
-} from "../../src/server/tool-schema.js";
+import { CriticOutputSchema, type CriticInput } from "../../src/server/tool-schema.js";
 
 const criticConfig = { baseUrl: "https://example.test/v1", apiKey: "key", model: "test-model" };
 
-function input(overrides: Partial<AdversarialCritiqueInput> = {}): AdversarialCritiqueInput {
+function input(overrides: Partial<CriticInput> = {}): CriticInput {
   return { artifact: "const x = 1;", mode: "code", round: 1, ...overrides };
 }
 
-describe("handleAdversarialCritique", () => {
+describe("handleCritic", () => {
   it("returns approved with done:true when the critic finds no issues", async () => {
     const criticFn = vi.fn().mockResolvedValue({ issues: [], summary: "Looks good." });
 
-    const result = await handleAdversarialCritique(input(), { criticConfig, criticFn });
+    const result = await handleCritic(input(), { criticConfig, criticFn });
 
     expect(result.isError).toBeUndefined();
     expect(result.structuredContent.verdict).toBe("approved");
@@ -31,7 +28,7 @@ describe("handleAdversarialCritique", () => {
       summary: "One bug found.",
     });
 
-    const result = await handleAdversarialCritique(input({ round: 1 }), { criticConfig, criticFn });
+    const result = await handleCritic(input({ round: 1 }), { criticConfig, criticFn });
 
     expect(result.structuredContent.verdict).toBe("issues_found");
     expect(result.structuredContent.done).toBe(false);
@@ -41,7 +38,7 @@ describe("handleAdversarialCritique", () => {
   it("returns isError:true with verdict 'error' when the critic call fails", async () => {
     const criticFn = vi.fn().mockRejectedValue(new CriticError("boom"));
 
-    const result = await handleAdversarialCritique(input(), { criticConfig, criticFn });
+    const result = await handleCritic(input(), { criticConfig, criticFn });
 
     expect(result.isError).toBe(true);
     expect(result.structuredContent.verdict).toBe("error");
@@ -63,9 +60,9 @@ describe("handleAdversarialCritique", () => {
       summary: "One major issue found.",
     });
 
-    const result = await handleAdversarialCritique(input(), { criticConfig, criticFn });
+    const result = await handleCritic(input(), { criticConfig, criticFn });
 
-    expect(() => AdversarialCritiqueOutputSchema.parse(result.structuredContent)).not.toThrow();
+    expect(() => CriticOutputSchema.parse(result.structuredContent)).not.toThrow();
   });
 
   it("resolves to verdict 'error' with an intact history blob when the critic returns malformed issue elements", async () => {
@@ -86,7 +83,7 @@ describe("handleAdversarialCritique", () => {
     const criticFn = (config: typeof criticConfig, request: Parameters<typeof critique>[1]) =>
       critique(config, request, fetchImpl as unknown as typeof fetch);
 
-    const result = await handleAdversarialCritique(input(), { criticConfig, criticFn });
+    const result = await handleCritic(input(), { criticConfig, criticFn });
 
     expect(result.isError).toBe(true);
     expect(result.structuredContent.verdict).toBe("error");
@@ -110,7 +107,7 @@ describe("handleAdversarialCritique", () => {
       summary: "One bug found.",
     });
 
-    const result = await handleAdversarialCritique(input({ round: 2, history: poisoned }), {
+    const result = await handleCritic(input({ round: 2, history: poisoned }), {
       criticConfig,
       criticFn,
     });
@@ -126,7 +123,7 @@ describe("handleAdversarialCritique", () => {
       summary: "Found one new issue.",
     });
 
-    const result = await handleAdversarialCritique(input({ round: 2, history: priorHistory }), {
+    const result = await handleCritic(input({ round: 2, history: priorHistory }), {
       criticConfig,
       criticFn,
     });

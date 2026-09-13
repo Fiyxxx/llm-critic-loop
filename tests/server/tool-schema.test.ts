@@ -1,9 +1,9 @@
 import { describe, expect, it } from "vitest";
-import { AdversarialCritiqueInputSchema } from "../../src/server/tool-schema.js";
+import { CriticInputSchema } from "../../src/server/tool-schema.js";
 
-describe("AdversarialCritiqueInputSchema", () => {
+describe("CriticInputSchema", () => {
   it("accepts a minimal valid input and defaults round to 1", () => {
-    const result = AdversarialCritiqueInputSchema.parse({
+    const result = CriticInputSchema.parse({
       artifact: "const x = 1;",
       mode: "code",
     });
@@ -11,17 +11,15 @@ describe("AdversarialCritiqueInputSchema", () => {
   });
 
   it("rejects an empty artifact", () => {
-    expect(() => AdversarialCritiqueInputSchema.parse({ artifact: "", mode: "code" })).toThrow();
+    expect(() => CriticInputSchema.parse({ artifact: "", mode: "code" })).toThrow();
   });
 
   it("rejects an invalid mode", () => {
-    expect(() =>
-      AdversarialCritiqueInputSchema.parse({ artifact: "text", mode: "spreadsheet" }),
-    ).toThrow();
+    expect(() => CriticInputSchema.parse({ artifact: "text", mode: "spreadsheet" })).toThrow();
   });
 
   it("accepts the full shape with history and config overrides", () => {
-    const result = AdversarialCritiqueInputSchema.parse({
+    const result = CriticInputSchema.parse({
       artifact: "text",
       mode: "docs",
       context: "a README",

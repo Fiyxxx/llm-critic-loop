@@ -1,6 +1,6 @@
 import { z } from "zod";
 
-export const AdversarialCritiqueInputSchema = z.object({
+export const CriticInputSchema = z.object({
   artifact: z.string().min(1).describe("The code or docs content to critique"),
   mode: z
     .enum(["code", "docs"])
@@ -39,14 +39,14 @@ export const AdversarialCritiqueInputSchema = z.object({
     .describe("Convergence tuning overrides"),
 });
 
-export type AdversarialCritiqueInput = z.infer<typeof AdversarialCritiqueInputSchema>;
+export type CriticInput = z.infer<typeof CriticInputSchema>;
 
 /**
  * Mirrors ToolResult["structuredContent"] exactly. The MCP SDK runtime-validates
  * a successful tool result against this once it is declared, so the two must stay
  * in lockstep — a drift here fails every real call, not just malformed ones.
  */
-export const AdversarialCritiqueOutputSchema = z.object({
+export const CriticOutputSchema = z.object({
   verdict: z
     .enum(["approved", "issues_found", "stale", "cap_reached", "error"])
     .describe("Convergence verdict for this round"),
