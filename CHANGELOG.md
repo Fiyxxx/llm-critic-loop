@@ -10,7 +10,10 @@ adheres to [Semantic Versioning](https://semver.org/) once it reaches 1.0.
 
 - `npx llm-critic-loop init`: interactive setup wizard (provider, model,
   API key, scope) that runs `claude mcp add` for you, or prints the
-  equivalent command if the `claude` CLI isn't on `PATH`.
+  equivalent command if the `claude` CLI isn't on `PATH`. Idempotent:
+  rerunning it removes any existing `critic` entry at the chosen scope
+  first, so it's also the standard way to change provider, model, key, or
+  scope later.
 - CI workflow (lint, format check, build, test on Node 18/20/22).
 - ESLint + Prettier tooling (`npm run lint`, `npm run format`).
 - Test coverage reporting (`npm run test:coverage`).

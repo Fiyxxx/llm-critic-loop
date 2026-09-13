@@ -103,8 +103,14 @@ export async function runInit(deps: InitDeps = {}): Promise<InitResult> {
 
   const apiKey = await prompter.apiKey();
   const scope = await prompter.scope();
-  const args = buildAddCommand({ baseUrl, apiKey, model, scope });
 
+  // Idempotent upsert: `claude mcp add` refuses if the name already exists,
+  // so rerunning init to change settings would otherwise just fail with
+  // "already exists". Remove any prior entry at this scope first; a failure
+  // here (typically "nothing to remove") is expected and harmless.
+  runCommand("claude", ["mcp", "remove", "critic", "-s", scope]);
+
+  const args = buildAddCommand({ baseUrl, apiKey, model, scope });
   const result = runCommand("claude", args);
   if (result.error?.code === "ENOENT") {
     return { args, ran: false };
@@ -124,14 +130,18 @@ export function formatInitResult(result: InitResult): string {
   if (!result.ran) {
     return [
       "Couldn't find the `claude` CLI on your PATH, so nothing was run automatically.",
-      "Run this yourself to add the critic MCP server:",
+      "Run this yourself to add or update the critic MCP server:",
       "",
       manualCommand,
     ].join("\n");
   }
 
   if (result.succeeded) {
-    return [result.output ?? "", "", "critic added. Restart your MCP client to use it."].join("\n");
+    return [
+      result.output ?? "",
+      "",
+      "critic is configured. Restart your MCP client to use it.",
+    ].join("\n");
   }
 
   return [

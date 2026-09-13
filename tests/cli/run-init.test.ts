@@ -97,6 +97,43 @@ describe("runInit", () => {
     expect(result.output).toContain("server already exists");
   });
 
+  it("removes any existing critic entry at the chosen scope before adding, so rerunning updates settings", async () => {
+    const prompter = fakePrompter();
+    const runCommand: RunCommand = vi.fn().mockReturnValue({
+      status: 0,
+      stdout: "ok",
+      stderr: "",
+    });
+
+    await runInit({ prompter, runCommand });
+
+    const calls = (runCommand as ReturnType<typeof vi.fn>).mock.calls;
+    const removeCall = calls.find(([, args]: [string, string[]]) => args[1] === "remove");
+    expect(removeCall).toBeDefined();
+    expect(removeCall![1]).toEqual(["mcp", "remove", "critic", "-s", "local"]);
+
+    const addCallIndex = calls.findIndex(([, args]: [string, string[]]) => args[1] === "add");
+    const removeCallIndex = calls.findIndex(([, args]: [string, string[]]) => args[1] === "remove");
+    expect(removeCallIndex).toBeLessThan(addCallIndex);
+  });
+
+  it("doesn't let a failed removal (nothing to remove) block the add from running", async () => {
+    const prompter = fakePrompter();
+    const runCommand: RunCommand = vi
+      .fn()
+      .mockImplementation((_cmd: string, args: string[]) =>
+        args[1] === "remove"
+          ? { status: 1, stdout: "", stderr: 'No MCP server named "critic" in local scope' }
+          : { status: 0, stdout: "Added critic", stderr: "" },
+      );
+
+    const result = await runInit({ prompter, runCommand });
+
+    expect(result.ran).toBe(true);
+    expect(result.succeeded).toBe(true);
+    expect(result.output).toContain("Added critic");
+  });
+
   it("reports the claude CLI as unavailable rather than crashing when the binary is missing", async () => {
     const prompter = fakePrompter();
     const enoent = Object.assign(new Error("spawn claude ENOENT"), { code: "ENOENT" });

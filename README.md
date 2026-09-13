@@ -47,6 +47,19 @@ is on your `PATH`, it runs `claude mcp add` for you; otherwise it prints the
 exact command to paste. Nothing is written to disk — the key only ever goes
 into the command that registers the server.
 
+### Changing provider, model, key, or scope later
+
+Run the same command again:
+
+```bash
+npx -y llm-critic-loop init
+```
+
+It's idempotent — it replaces whatever `critic` config already exists at
+the scope you pick, so rerunning it is the standard way to switch models,
+rotate a key, or move it from project-only to all-projects. No need to
+remove anything first.
+
 ### Manual setup
 
 Prefer to do it by hand, or using a different MCP client? Add it with the
@@ -57,6 +70,10 @@ claude mcp add critic -e CRITIC_BASE_URL=https://api.openai.com/v1 \
   -e CRITIC_API_KEY=sk-... -e CRITIC_MODEL=gpt-4o \
   -- npx -y llm-critic-loop
 ```
+
+`claude mcp add` refuses if `critic` already exists, so to change settings
+by hand, remove it first: `claude mcp remove critic` (add `-s local` /
+`-s user` if you added it at a non-default scope), then run `add` again.
 
 Or add it directly to your MCP client config:
 
