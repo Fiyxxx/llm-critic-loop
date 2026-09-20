@@ -4,7 +4,7 @@ import { CriticError, critique } from "../../src/client/critic-client.js";
 import { decodeHistory, encodeHistory } from "../../src/core/history.js";
 import { CriticOutputSchema, type CriticInput } from "../../src/server/tool-schema.js";
 
-const criticConfig = { baseUrl: "https://example.test/v1", apiKey: "key", model: "test-model" };
+const criticConfig = { mode: "http" as const, baseUrl: "https://example.test/v1", apiKey: "key", model: "test-model" };
 
 function input(overrides: Partial<CriticInput> = {}): CriticInput {
   return { artifact: "const x = 1;", mode: "code", round: 1, ...overrides };

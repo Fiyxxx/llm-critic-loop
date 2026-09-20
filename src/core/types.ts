@@ -28,3 +28,7 @@ export interface ConvergenceResult {
   verdict: Verdict;
   done: boolean;
 }
+
+export type CriticConfig =
+  | { mode: "http"; baseUrl: string; apiKey: string; model: string }
+  | { mode: "cli"; cli: "claude" | "codex"; model?: string };

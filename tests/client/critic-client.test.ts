@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from "vitest";
 import { CriticError, critique } from "../../src/client/critic-client.js";
 
-const config = { baseUrl: "https://example.test/v1", apiKey: "key", model: "test-model" };
+const config = { mode: "http" as const, baseUrl: "https://example.test/v1", apiKey: "key", model: "test-model" };
 const request = {
   systemPrompt: "You are a critic.",
   artifact: "const x = 1",
