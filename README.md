@@ -1,3 +1,5 @@
+![llm-critic-loop — independent fresh-session review for code and docs](assets/llm-critic-loop-banner.svg)
+
 # llm-critic-loop
 
 [![CI](https://github.com/Fiyxxx/llm-critic-loop/actions/workflows/ci.yml/badge.svg)](https://github.com/Fiyxxx/llm-critic-loop/actions/workflows/ci.yml)

@@ -1,0 +1,48 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 640" role="img" aria-labelledby="title desc">
+  <title id="title">llm-critic-loop</title>
+  <desc id="desc">A minimalist banner showing an artifact moving through an independent critic loop until approval.</desc>
+
+  <rect width="1600" height="640" rx="28" fill="#f4f2ea"/>
+
+  <g fill="#17221b">
+    <text x="72" y="78" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="19" font-weight="700" letter-spacing="4">INDEPENDENT REVIEW / MCP</text>
+
+    <text x="68" y="238" font-family="Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" font-size="104" font-weight="800" letter-spacing="-5">llm-critic-</text>
+    <text x="68" y="344" font-family="Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" font-size="104" font-weight="800" letter-spacing="-5">loop</text>
+
+    <text x="72" y="430" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="25" font-weight="600" letter-spacing="2">WRITE. CRITIQUE. CONVERGE.</text>
+    <text x="72" y="478" font-family="Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" font-size="22" fill="#697168">Fresh-session review for code and docs.</text>
+  </g>
+
+  <g transform="translate(850 106)">
+    <rect x="0" y="0" width="674" height="428" rx="18" fill="#fffef9" stroke="#17221b" stroke-width="4"/>
+    <path d="M0 67H674" stroke="#17221b" stroke-width="4"/>
+    <circle cx="30" cy="34" r="7" fill="#d8d8cd"/>
+    <circle cx="54" cy="34" r="7" fill="#d8d8cd"/>
+    <circle cx="78" cy="34" r="7" fill="#d8d8cd"/>
+    <text x="618" y="42" text-anchor="end" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="17" font-weight="700" letter-spacing="2" fill="#17221b">ROUND 03</text>
+
+    <rect x="54" y="118" width="190" height="104" rx="10" fill="#edf0e5" stroke="#17221b" stroke-width="3"/>
+    <text x="149" y="160" text-anchor="middle" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="17" font-weight="700" letter-spacing="2" fill="#697168">ARTIFACT</text>
+    <path d="M102 185H196" stroke="#17221b" stroke-width="5" stroke-linecap="round"/>
+
+    <rect x="430" y="118" width="190" height="104" rx="10" fill="#edf0e5" stroke="#17221b" stroke-width="3"/>
+    <text x="525" y="160" text-anchor="middle" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="17" font-weight="700" letter-spacing="2" fill="#697168">CRITIC</text>
+    <path d="M478 185H572" stroke="#17221b" stroke-width="5" stroke-linecap="round"/>
+
+    <path d="M270 143H391" fill="none" stroke="#ef6843" stroke-width="5" stroke-linecap="round"/>
+    <path d="M381 129L398 143L381 157" fill="none" stroke="#ef6843" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
+
+    <path d="M405 202C370 265 289 265 255 202" fill="none" stroke="#17221b" stroke-width="5" stroke-linecap="round"/>
+    <path d="M265 217L250 202L270 192" fill="none" stroke="#17221b" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
+
+    <rect x="190" y="306" width="294" height="62" rx="31" fill="#dfe9cf" stroke="#17221b" stroke-width="3"/>
+    <circle cx="230" cy="337" r="14" fill="#39734b"/>
+    <path d="M223 337L229 343L240 330" fill="none" stroke="#fffef9" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+    <text x="264" y="345" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="21" font-weight="700" letter-spacing="1" fill="#17221b">0 ISSUES · APPROVED</text>
+  </g>
+
+  <path d="M68 555H1532" stroke="#d8d8cd" stroke-width="2"/>
+  <text x="72" y="594" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="17" font-weight="700" letter-spacing="3" fill="#697168">A FRESH CRITIC. EVERY ROUND.</text>
+  <text x="1528" y="594" text-anchor="end" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="17" font-weight="700" letter-spacing="3" fill="#697168">OPEN SOURCE</text>
+</svg>
