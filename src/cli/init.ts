@@ -130,22 +130,27 @@ export async function runInit(deps: InitDeps = {}): Promise<InitResult> {
   const provider = await prompter.selectProvider(PROVIDERS);
   const baseUrl = provider.baseUrl ?? (await prompter.customBaseUrl());
 
-  let model: string;
-  if (provider.models.length === 0) {
-    model = await prompter.customModel();
-  } else {
-    const choice = await prompter.selectModel([...provider.models, OTHER_MODEL_OPTION]);
-    model = choice === OTHER_MODEL_OPTION ? await prompter.customModel() : choice;
-  }
-
   const cliAvailable = provider.cliAdapter !== undefined && cliIsAvailable(provider.cliAdapter, runCommand);
   const authMethod = cliAvailable ? await prompter.authMethod(provider.cliAdapter as "claude" | "codex") : "key";
   const scope = await prompter.scope();
 
-  const addParams: BuildAddCommandParams =
-    authMethod === "cli"
-      ? { authMode: "cli", cli: provider.cliAdapter as "claude" | "codex", model, scope }
-      : { authMode: "http", baseUrl, apiKey: await prompter.apiKey(), model, scope };
+  let addParams: BuildAddCommandParams;
+  if (authMethod === "cli") {
+    // No model prompt here: cli auth omits CRITIC_MODEL entirely so the CLI
+    // uses its own configured default, rather than baking in an API-namespace
+    // model id (from `provider.models`) that the CLI's own --model flag may
+    // not recognize.
+    addParams = { authMode: "cli", cli: provider.cliAdapter as "claude" | "codex", scope };
+  } else {
+    let model: string;
+    if (provider.models.length === 0) {
+      model = await prompter.customModel();
+    } else {
+      const choice = await prompter.selectModel([...provider.models, OTHER_MODEL_OPTION]);
+      model = choice === OTHER_MODEL_OPTION ? await prompter.customModel() : choice;
+    }
+    addParams = { authMode: "http", baseUrl, apiKey: await prompter.apiKey(), model, scope };
+  }
 
   // Idempotent upsert: `claude mcp add` refuses if the name already exists,
   // so rerunning init to change settings would otherwise just fail with

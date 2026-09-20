@@ -188,7 +188,6 @@ describe("runInit CLI auth", () => {
   it("asks about auth method and skips the API key prompt when the CLI is chosen", async () => {
     const prompter = fakePrompter({
       selectProvider: vi.fn().mockResolvedValue(ANTHROPIC),
-      selectModel: vi.fn().mockResolvedValue("claude-opus-5"),
       authMethod: vi.fn().mockResolvedValue("cli"),
     });
     const runCommand: RunCommand = vi
@@ -201,8 +200,11 @@ describe("runInit CLI auth", () => {
 
     expect(prompter.authMethod).toHaveBeenCalledWith("claude");
     expect(prompter.apiKey).not.toHaveBeenCalled();
+    expect(prompter.selectModel).not.toHaveBeenCalled();
+    expect(prompter.customModel).not.toHaveBeenCalled();
     expect(result.args).toContain("CRITIC_CLI=claude");
     expect(result.args).not.toContain("CRITIC_BASE_URL");
+    expect(result.args.some((arg) => arg.startsWith("CRITIC_MODEL="))).toBe(false);
   });
 
   it("still asks for an API key when the CLI is available but the user picks 'key'", async () => {
