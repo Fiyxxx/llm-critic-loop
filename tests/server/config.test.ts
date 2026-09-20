@@ -50,6 +50,21 @@ describe("loadCriticConfig", () => {
     expect(() => loadCriticConfig(env as NodeJS.ProcessEnv)).toThrow(ConfigError);
   });
 
+  it("falls through to http-mode validation when CRITIC_CLI is an empty string", () => {
+    const env = {
+      CRITIC_CLI: "",
+      CRITIC_BASE_URL: "https://example.test/v1",
+      CRITIC_API_KEY: "secret",
+      CRITIC_MODEL: "test-model",
+    };
+    expect(loadCriticConfig(env as NodeJS.ProcessEnv)).toEqual({
+      mode: "http",
+      baseUrl: "https://example.test/v1",
+      apiKey: "secret",
+      model: "test-model",
+    });
+  });
+
   it("ignores CRITIC_BASE_URL/CRITIC_API_KEY when CRITIC_CLI is set", () => {
     const env = { CRITIC_CLI: "claude", CRITIC_BASE_URL: "should-be-ignored" };
     const config = loadCriticConfig(env as NodeJS.ProcessEnv);

@@ -13,7 +13,7 @@ function isKnownCli(value: string): value is KnownCli {
 
 export function loadCriticConfig(env: NodeJS.ProcessEnv = process.env): CriticEnvConfig {
   const cli = env.CRITIC_CLI;
-  if (cli !== undefined) {
+  if (cli) {
     if (!isKnownCli(cli)) {
       throw new ConfigError(`CRITIC_CLI must be one of: ${KNOWN_CLIS.join(", ")} (got "${cli}")`);
     }
