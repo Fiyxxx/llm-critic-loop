@@ -19,31 +19,28 @@ export function nodeSupportsInit(nodeVersion: string): boolean {
 
 export const OTHER_MODEL_OPTION = "Other (type your own)";
 
-export interface BuildAddCommandParams {
-  baseUrl: string;
-  apiKey: string;
-  model: string;
-  scope: Scope;
-}
+export type BuildAddCommandParams =
+  | { authMode: "http"; baseUrl: string; apiKey: string; model: string; scope: Scope }
+  | { authMode: "cli"; cli: "claude" | "codex"; model?: string; scope: Scope };
 
 export function buildAddCommand(params: BuildAddCommandParams): string[] {
-  return [
-    "mcp",
-    "add",
-    "critic",
-    "-e",
-    `CRITIC_BASE_URL=${params.baseUrl}`,
-    "-e",
-    `CRITIC_API_KEY=${params.apiKey}`,
-    "-e",
-    `CRITIC_MODEL=${params.model}`,
-    "-s",
-    params.scope,
-    "--",
-    "npx",
-    "-y",
-    "llm-critic-loop",
-  ];
+  const envArgs =
+    params.authMode === "cli"
+      ? [
+          "-e",
+          `CRITIC_CLI=${params.cli}`,
+          ...(params.model ? ["-e", `CRITIC_MODEL=${params.model}`] : []),
+        ]
+      : [
+          "-e",
+          `CRITIC_BASE_URL=${params.baseUrl}`,
+          "-e",
+          `CRITIC_API_KEY=${params.apiKey}`,
+          "-e",
+          `CRITIC_MODEL=${params.model}`,
+        ];
+
+  return ["mcp", "add", "critic", ...envArgs, "-s", params.scope, "--", "npx", "-y", "llm-critic-loop"];
 }
 
 export interface Prompter {
@@ -53,6 +50,7 @@ export interface Prompter {
   customModel(): Promise<string>;
   apiKey(): Promise<string>;
   scope(): Promise<Scope>;
+  authMethod(cli: "claude" | "codex"): Promise<"cli" | "key">;
 }
 
 export interface CommandResult {
@@ -86,6 +84,11 @@ function defaultRunCommand(cmd: string, args: string[]): CommandResult {
   };
 }
 
+function cliIsAvailable(cli: string, runCommand: RunCommand): boolean {
+  const result = runCommand(cli, ["--version"]);
+  return result.error?.code !== "ENOENT";
+}
+
 export async function runInit(deps: InitDeps = {}): Promise<InitResult> {
   const prompter = deps.prompter ?? (await getDefaultPrompter());
   const runCommand = deps.runCommand ?? defaultRunCommand;
@@ -101,8 +104,14 @@ export async function runInit(deps: InitDeps = {}): Promise<InitResult> {
     model = choice === OTHER_MODEL_OPTION ? await prompter.customModel() : choice;
   }
 
-  const apiKey = await prompter.apiKey();
+  const cliAvailable = provider.cliAdapter !== undefined && cliIsAvailable(provider.cliAdapter, runCommand);
+  const authMethod = cliAvailable ? await prompter.authMethod(provider.cliAdapter as "claude" | "codex") : "key";
   const scope = await prompter.scope();
+
+  const addParams: BuildAddCommandParams =
+    authMethod === "cli"
+      ? { authMode: "cli", cli: provider.cliAdapter as "claude" | "codex", model, scope }
+      : { authMode: "http", baseUrl, apiKey: await prompter.apiKey(), model, scope };
 
   // Idempotent upsert: `claude mcp add` refuses if the name already exists,
   // so rerunning init to change settings would otherwise just fail with
@@ -110,7 +119,7 @@ export async function runInit(deps: InitDeps = {}): Promise<InitResult> {
   // here (typically "nothing to remove") is expected and harmless.
   runCommand("claude", ["mcp", "remove", "critic", "-s", scope]);
 
-  const args = buildAddCommand({ baseUrl, apiKey, model, scope });
+  const args = buildAddCommand(addParams);
   const result = runCommand("claude", args);
   if (result.error?.code === "ENOENT") {
     return { args, ran: false };
@@ -229,6 +238,18 @@ async function getDefaultPrompter(): Promise<Prompter> {
           ],
         }),
       );
+    },
+    async authMethod(cli) {
+      const choice = unwrap(
+        await clack.select({
+          message: `Use your existing ${cli} login, or enter an API key?`,
+          options: [
+            { value: "cli", label: `Use my ${cli} login` },
+            { value: "key", label: "Enter an API key" },
+          ],
+        }),
+      );
+      return choice as "cli" | "key";
     },
   };
 }

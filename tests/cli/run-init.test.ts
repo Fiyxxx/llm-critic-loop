@@ -16,6 +16,14 @@ const CUSTOM: ProviderPreset = {
   models: [],
 };
 
+const ANTHROPIC: ProviderPreset = {
+  id: "anthropic",
+  name: "Anthropic",
+  baseUrl: "https://api.anthropic.com/v1",
+  models: ["claude-opus-5"],
+  cliAdapter: "claude",
+};
+
 function fakePrompter(overrides: Partial<Prompter> = {}): Prompter {
   return {
     selectProvider: vi.fn().mockResolvedValue(OPENAI),
@@ -24,6 +32,7 @@ function fakePrompter(overrides: Partial<Prompter> = {}): Prompter {
     customModel: vi.fn().mockResolvedValue("should-not-be-called"),
     apiKey: vi.fn().mockResolvedValue("sk-test"),
     scope: vi.fn().mockResolvedValue("local"),
+    authMethod: vi.fn().mockResolvedValue("key"),
     ...overrides,
   };
 }
@@ -148,5 +157,68 @@ describe("runInit", () => {
 
     expect(result.ran).toBe(false);
     expect(result.args.length).toBeGreaterThan(0);
+  });
+});
+
+describe("runInit CLI auth", () => {
+  it("does not ask about auth method when the provider has no CLI adapter", async () => {
+    const prompter = fakePrompter();
+
+    await runInit({ prompter, runCommand: succeedingRunCommand });
+
+    expect(prompter.authMethod).not.toHaveBeenCalled();
+  });
+
+  it("does not ask about auth method when the CLI adapter isn't installed", async () => {
+    const prompter = fakePrompter({ selectProvider: vi.fn().mockResolvedValue(ANTHROPIC) });
+    const runCommand: RunCommand = vi
+      .fn()
+      .mockImplementation((cmd: string, args: string[]) =>
+        args[0] === "--version"
+          ? { status: null, stdout: "", stderr: "", error: Object.assign(new Error("ENOENT"), { code: "ENOENT" }) }
+          : { status: 0, stdout: "Added", stderr: "" },
+      );
+
+    await runInit({ prompter, runCommand });
+
+    expect(prompter.authMethod).not.toHaveBeenCalled();
+  });
+
+  it("asks about auth method and skips the API key prompt when the CLI is chosen", async () => {
+    const prompter = fakePrompter({
+      selectProvider: vi.fn().mockResolvedValue(ANTHROPIC),
+      selectModel: vi.fn().mockResolvedValue("claude-opus-5"),
+      authMethod: vi.fn().mockResolvedValue("cli"),
+    });
+    const runCommand: RunCommand = vi
+      .fn()
+      .mockImplementation((cmd: string, args: string[]) =>
+        args[0] === "--version" ? { status: 0, stdout: "1.0.0", stderr: "" } : { status: 0, stdout: "Added", stderr: "" },
+      );
+
+    const result = await runInit({ prompter, runCommand });
+
+    expect(prompter.authMethod).toHaveBeenCalledWith("claude");
+    expect(prompter.apiKey).not.toHaveBeenCalled();
+    expect(result.args).toContain("CRITIC_CLI=claude");
+    expect(result.args).not.toContain("CRITIC_BASE_URL");
+  });
+
+  it("still asks for an API key when the CLI is available but the user picks 'key'", async () => {
+    const prompter = fakePrompter({
+      selectProvider: vi.fn().mockResolvedValue(ANTHROPIC),
+      selectModel: vi.fn().mockResolvedValue("claude-opus-5"),
+      authMethod: vi.fn().mockResolvedValue("key"),
+    });
+    const runCommand: RunCommand = vi
+      .fn()
+      .mockImplementation((cmd: string, args: string[]) =>
+        args[0] === "--version" ? { status: 0, stdout: "1.0.0", stderr: "" } : { status: 0, stdout: "Added", stderr: "" },
+      );
+
+    const result = await runInit({ prompter, runCommand });
+
+    expect(prompter.apiKey).toHaveBeenCalled();
+    expect(result.args).toContain("CRITIC_BASE_URL=https://api.anthropic.com/v1");
   });
 });
