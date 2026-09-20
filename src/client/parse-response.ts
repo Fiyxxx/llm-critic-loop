@@ -3,6 +3,12 @@ import type { CriticResponse } from "./types.js";
 
 const SEVERITIES: readonly string[] = ["minor", "major", "critical"];
 
+/**
+ * Every issue element must be fully shaped before we hand it to `core` —
+ * downstream dedup calls `.toLowerCase()` on `description`, so an element
+ * missing that field would throw a raw TypeError outside the handler's
+ * catch and destroy the returned history blob.
+ */
 function isValidIssue(value: unknown): value is Issue {
   if (typeof value !== "object" || value === null) return false;
   const issue = value as Record<string, unknown>;
@@ -13,6 +19,13 @@ function isValidIssue(value: unknown): value is Issue {
   return true;
 }
 
+/**
+ * Rebuild the issue from only the fields we declare, dropping anything extra
+ * the critic invented. The tool's MCP outputSchema is generated with
+ * `additionalProperties: false`, and MCP clients validate structuredContent
+ * against it strictly — so passing a stray field straight through from model
+ * output would fail the call on the client side.
+ */
 function normalizeIssue(issue: Issue): Issue {
   return {
     category: issue.category,

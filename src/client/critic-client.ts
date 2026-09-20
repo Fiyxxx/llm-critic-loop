@@ -1,4 +1,3 @@
-import type { Issue } from "../core/types.js";
 import { buildUserContent, withStrictJsonInstruction } from "./prompt-shaping.js";
 import { parseResponse, snippet } from "./parse-response.js";
 import { CriticError } from "./types.js";
