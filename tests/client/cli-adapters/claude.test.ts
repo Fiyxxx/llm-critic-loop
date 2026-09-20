@@ -44,6 +44,20 @@ describe("runClaudeCli", () => {
     expect(outcome.exitError).toContain("auth error");
   });
 
+  it("reports a useful exitError on a spawnSync timeout, not a bare trailing colon", () => {
+    const etimedout = Object.assign(new Error("spawn claude ETIMEDOUT"), { code: "ETIMEDOUT" });
+    const runCommand: RunCliCommand = vi
+      .fn()
+      .mockReturnValue({ status: null, stdout: "", stderr: "", error: etimedout });
+
+    const outcome = runClaudeCli(request, undefined, false, "/tmp/scratch", 120_000, runCommand);
+
+    expect(outcome.notFound).toBeFalsy();
+    expect(outcome.exitError).toBeDefined();
+    expect(outcome.exitError).not.toBe("claude exited null: ");
+    expect(outcome.exitError).toContain("timed out");
+  });
+
   it("returns parsed:null on malformed stdout", () => {
     const runCommand: RunCliCommand = vi.fn().mockReturnValue({ status: 0, stdout: "not json", stderr: "" });
 

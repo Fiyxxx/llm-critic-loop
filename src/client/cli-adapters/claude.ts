@@ -1,6 +1,7 @@
 import { buildUserContent, withStrictJsonInstruction } from "../prompt-shaping.js";
 import { parseResponse, validateResponse } from "../parse-response.js";
 import { ISSUE_JSON_SCHEMA } from "./schema.js";
+import { mapSpawnFailure } from "../cli-run.js";
 import type { RunCliCommand } from "../cli-run.js";
 import type { CriticRequest } from "../types.js";
 
@@ -41,15 +42,12 @@ export function runClaudeCli(
 
   const result = runCommand("claude", args, timeoutMs, cwd);
 
-  if (result.error?.code === "ENOENT") {
+  const failure = mapSpawnFailure("claude", result, timeoutMs);
+  if (failure.notFound) {
     return { raw: "", parsed: null, notFound: true };
   }
-  if (result.status !== 0) {
-    return {
-      raw: result.stdout,
-      parsed: null,
-      exitError: `claude exited ${result.status}: ${result.stderr || result.stdout}`,
-    };
+  if (failure.exitError) {
+    return { raw: result.stdout, parsed: null, exitError: failure.exitError };
   }
 
   let envelope: ClaudeResultEnvelope;

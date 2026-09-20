@@ -64,6 +64,30 @@ describe("runCodexCli", () => {
     expect(outcome.exitError).toContain("not logged in");
   });
 
+  it("reports a useful exitError on a spawnSync timeout, not a bare trailing colon", () => {
+    const etimedout = Object.assign(new Error("spawn codex ETIMEDOUT"), { code: "ETIMEDOUT" });
+    const runCommand: RunCliCommand = vi
+      .fn()
+      .mockReturnValue({ status: null, stdout: "", stderr: "", error: etimedout });
+
+    const outcome = runCodexCli(request, undefined, false, scratchDir, 120_000, runCommand);
+
+    expect(outcome.notFound).toBeFalsy();
+    expect(outcome.exitError).toBeDefined();
+    expect(outcome.exitError).not.toBe("codex exited null: ");
+    expect(outcome.exitError).toContain("timed out");
+  });
+
+  it("does not read a stale output.json left over from a previous retry attempt", () => {
+    writeFileSync(join(scratchDir, "output.json"), JSON.stringify({ issues: [], summary: "stale from attempt 1" }));
+    const runCommand: RunCliCommand = vi.fn().mockReturnValue({ status: 0, stdout: "", stderr: "" });
+
+    const outcome = runCodexCli(request, undefined, true, scratchDir, 120_000, runCommand);
+
+    expect(outcome.exitError).toBeDefined();
+    expect(outcome.parsed).toBeNull();
+  });
+
   it("reports exitError when codex exits 0 but never writes the output file", () => {
     const runCommand: RunCliCommand = vi.fn().mockReturnValue({ status: 0, stdout: "", stderr: "" });
 
