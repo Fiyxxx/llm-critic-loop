@@ -3,6 +3,7 @@ export interface ProviderPreset {
   name: string;
   baseUrl: string | null;
   models: string[];
+  cliAdapter?: "claude" | "codex";
 }
 
 export const PROVIDERS: ProviderPreset[] = [
@@ -11,12 +12,14 @@ export const PROVIDERS: ProviderPreset[] = [
     name: "OpenAI",
     baseUrl: "https://api.openai.com/v1",
     models: ["gpt-6-astra", "gpt-5.6-sol", "gpt-5.6-terra", "gpt-5.6-luna"],
+    cliAdapter: "codex",
   },
   {
     id: "anthropic",
     name: "Anthropic (Claude, via its OpenAI-compatible endpoint)",
     baseUrl: "https://api.anthropic.com/v1",
     models: ["claude-opus-5", "claude-sonnet-5", "claude-haiku-4-5-20251001"],
+    cliAdapter: "claude",
   },
   {
     id: "gemini",

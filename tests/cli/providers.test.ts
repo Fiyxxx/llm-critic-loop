@@ -27,4 +27,14 @@ describe("PROVIDERS", () => {
     const ids = PROVIDERS.map((p) => p.id);
     expect(new Set(ids).size).toBe(ids.length);
   });
+
+  it("marks anthropic and openai with their CLI adapter, and leaves other providers unmarked", () => {
+    const anthropic = PROVIDERS.find((p) => p.id === "anthropic");
+    const openai = PROVIDERS.find((p) => p.id === "openai");
+    const gemini = PROVIDERS.find((p) => p.id === "gemini");
+
+    expect(anthropic?.cliAdapter).toBe("claude");
+    expect(openai?.cliAdapter).toBe("codex");
+    expect(gemini?.cliAdapter).toBeUndefined();
+  });
 });
