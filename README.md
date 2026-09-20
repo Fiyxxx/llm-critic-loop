@@ -97,6 +97,16 @@ Or add it directly to your MCP client config:
 OpenAI, a local model server, or a compatibility proxy in front of another
 provider.
 
+All three `CRITIC_BASE_URL`/`CRITIC_API_KEY`/`CRITIC_MODEL` variables are
+**required** unless `CRITIC_CLI` is set, in which case those three are
+ignored and only `CRITIC_CLI` (`claude` or `codex`) is required —
+`CRITIC_MODEL` stays optional in that mode. If a required variable for
+whichever mode you're in is missing or empty, the server exits non-zero at
+startup with an explicit error naming the variable, rather than starting up
+and failing on the first tool call. That is deliberate — a misconfigured
+critic should be obvious immediately, not surface later as a mysterious
+`verdict: "error"`.
+
 ### Using your existing `claude` or `codex` login instead of a key
 
 If you already have [Claude Code](https://claude.com/claude-code) or
@@ -117,16 +127,6 @@ claude mcp add critic -e CRITIC_CLI=codex -- npx -y llm-critic-loop
 mode — omit it to use that CLI's own configured default model. The `init`
 wizard offers this automatically when it detects the relevant CLI on your
 `PATH`.
-
-All three `CRITIC_BASE_URL`/`CRITIC_API_KEY`/`CRITIC_MODEL` variables are
-**required** unless `CRITIC_CLI` is set, in which case those three are
-ignored and only `CRITIC_CLI` (`claude` or `codex`) is required —
-`CRITIC_MODEL` stays optional in that mode. If a required variable for
-whichever mode you're in is missing or empty, the server exits non-zero at
-startup with an explicit error naming the variable, rather than starting up
-and failing on the first tool call. That is deliberate — a misconfigured
-critic should be obvious immediately, not surface later as a mysterious
-`verdict: "error"`.
 
 ## How it stays fresh — and knows when to stop
 
