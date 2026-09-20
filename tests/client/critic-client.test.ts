@@ -71,7 +71,6 @@ describe("critique", () => {
           category: "bug",
           severity: "major",
           description: "off by one",
-          confidence: 0.9,
           suggestedFix: "use <= instead",
         },
       ],
@@ -84,9 +83,36 @@ describe("critique", () => {
     expect(result.issues[0]).toEqual({
       category: "bug",
       severity: "major",
+      confidence: "medium",
       description: "off by one",
     });
-    expect(Object.keys(result.issues[0])).toEqual(["category", "severity", "description"]);
+    expect(Object.keys(result.issues[0])).toEqual([
+      "category",
+      "severity",
+      "confidence",
+      "description",
+    ]);
+  });
+
+  it("preserves a valid confidence and suggestion from the critic", async () => {
+    const body = JSON.stringify({
+      issues: [
+        {
+          category: "bug",
+          severity: "major",
+          confidence: "low",
+          description: "off by one",
+          suggestion: "use <= instead",
+        },
+      ],
+      summary: "One bug found.",
+    });
+    const fetchImpl = vi.fn().mockResolvedValue(fakeResponse(body));
+
+    const result = await critique(config, request, fetchImpl as unknown as typeof fetch);
+
+    expect(result.issues[0].confidence).toBe("low");
+    expect(result.issues[0].suggestion).toBe("use <= instead");
   });
 
   it("preserves an issue's optional location field", async () => {

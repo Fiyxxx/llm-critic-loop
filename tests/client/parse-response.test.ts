@@ -15,7 +15,54 @@ describe("validateResponse", () => {
       issues: [{ category: "bug", severity: "major", description: "d", extra: true }],
       summary: "s",
     });
-    expect(result?.issues[0]).toEqual({ category: "bug", severity: "major", description: "d" });
+    expect(result?.issues[0]).toEqual({
+      category: "bug",
+      severity: "major",
+      confidence: "medium",
+      description: "d",
+    });
+  });
+
+  it("defaults confidence to medium when the critic omits it", () => {
+    const result = validateResponse({
+      issues: [{ category: "bug", severity: "major", description: "d" }],
+      summary: "s",
+    });
+    expect(result?.issues[0].confidence).toBe("medium");
+  });
+
+  it("defaults confidence to medium when the critic sends an invalid value", () => {
+    const result = validateResponse({
+      issues: [{ category: "bug", severity: "major", description: "d", confidence: "sure" }],
+      summary: "s",
+    });
+    expect(result?.issues[0].confidence).toBe("medium");
+  });
+
+  it("preserves a valid confidence value", () => {
+    const result = validateResponse({
+      issues: [{ category: "bug", severity: "major", description: "d", confidence: "low" }],
+      summary: "s",
+    });
+    expect(result?.issues[0].confidence).toBe("low");
+  });
+
+  it("preserves an issue's optional suggestion field", () => {
+    const result = validateResponse({
+      issues: [
+        { category: "bug", severity: "major", description: "d", suggestion: "use <= instead" },
+      ],
+      summary: "s",
+    });
+    expect(result?.issues[0].suggestion).toBe("use <= instead");
+  });
+
+  it("rejects a response whose suggestion is present but not a string", () => {
+    const result = validateResponse({
+      issues: [{ category: "bug", severity: "major", description: "d", suggestion: 42 }],
+      summary: "s",
+    });
+    expect(result).toBeNull();
   });
 });
 

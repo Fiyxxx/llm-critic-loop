@@ -55,7 +55,16 @@ export const CriticOutputSchema = z.object({
       z.object({
         category: z.string().describe("Taxonomy category for the issue, e.g. bug or clarity"),
         severity: z.enum(["minor", "major", "critical"]).describe("How serious the issue is"),
+        confidence: z
+          .enum(["low", "medium", "high"])
+          .describe(
+            "How sure the critic is this is a real issue; low-confidence issues are informational and don't block approval",
+          ),
         description: z.string().describe("What is wrong and why it matters"),
+        suggestion: z
+          .string()
+          .optional()
+          .describe("A concrete fix, only given when the critic is confident of one"),
         location: z
           .string()
           .optional()

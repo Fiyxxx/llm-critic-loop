@@ -18,6 +18,13 @@ adheres to [Semantic Versioning](https://semver.org/) once it reaches 1.0.
 - ESLint + Prettier tooling (`npm run lint`, `npm run format`).
 - Test coverage reporting (`npm run test:coverage`).
 - CONTRIBUTING.md, SECURITY.md, CODE_OF_CONDUCT.md, issue/PR templates.
+- Each issue now carries a `confidence` (`low`/`medium`/`high`) and an
+  optional `suggestion`. `low`-confidence issues still appear in `issues[]`
+  but no longer count toward the `issues_found`/`stale` verdict or
+  round-over-round staleness tracking, so a critic can flag an honest hunch
+  without blocking the loop on it.
+- New `architecture` category for `mode: "code"` (unwarranted structural
+  complexity — tangled responsibilities, single-caller abstractions).
 
 ### Changed
 
