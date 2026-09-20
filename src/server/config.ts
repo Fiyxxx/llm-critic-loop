@@ -37,5 +37,10 @@ export function loadCriticConfig(env: NodeJS.ProcessEnv = process.env): CriticEn
     throw new ConfigError(`Missing required environment variable(s): ${missing.join(", ")}`);
   }
 
-  return { mode: "http", baseUrl: baseUrl as string, apiKey: apiKey as string, model: model as string };
+  return {
+    mode: "http",
+    baseUrl: baseUrl as string,
+    apiKey: apiKey as string,
+    model: model as string,
+  };
 }

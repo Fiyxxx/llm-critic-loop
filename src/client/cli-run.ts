@@ -35,7 +35,11 @@ export interface SpawnFailure {
  * (missing binary, timeout, or any other spawn errno) the same way instead
  * of each re-deriving its own ad-hoc checks.
  */
-export function mapSpawnFailure(cli: string, result: CliRunResult, timeoutMs: number): SpawnFailure {
+export function mapSpawnFailure(
+  cli: string,
+  result: CliRunResult,
+  timeoutMs: number,
+): SpawnFailure {
   if (result.error) {
     if (result.error.code === "ENOENT") {
       return { notFound: true };
@@ -46,7 +50,10 @@ export function mapSpawnFailure(cli: string, result: CliRunResult, timeoutMs: nu
     return { notFound: false, exitError: `${cli} failed to run: ${result.error.message}` };
   }
   if (result.status !== 0) {
-    return { notFound: false, exitError: `${cli} exited ${result.status}: ${result.stderr || result.stdout}` };
+    return {
+      notFound: false,
+      exitError: `${cli} exited ${result.status}: ${result.stderr || result.stdout}`,
+    };
   }
   return { notFound: false };
 }

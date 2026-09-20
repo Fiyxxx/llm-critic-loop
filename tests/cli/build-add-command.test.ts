@@ -44,7 +44,12 @@ describe("buildAddCommand", () => {
   });
 
   it("builds CRITIC_CLI argv for cli auth, with a model", () => {
-    const args = buildAddCommand({ authMode: "cli", cli: "claude", model: "claude-opus-5", scope: "local" });
+    const args = buildAddCommand({
+      authMode: "cli",
+      cli: "claude",
+      model: "claude-opus-5",
+      scope: "local",
+    });
 
     expect(args).toEqual([
       "mcp",

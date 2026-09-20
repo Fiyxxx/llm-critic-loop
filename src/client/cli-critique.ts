@@ -27,7 +27,14 @@ export async function cliCritique(
   try {
     let lastRaw = "";
     for (const strict of [false, true]) {
-      const outcome = adapter(request, config.model, strict, scratchDir, CLI_TIMEOUT_MS, runCommand);
+      const outcome = adapter(
+        request,
+        config.model,
+        strict,
+        scratchDir,
+        CLI_TIMEOUT_MS,
+        runCommand,
+      );
 
       if (outcome.notFound) {
         throw new CriticError(

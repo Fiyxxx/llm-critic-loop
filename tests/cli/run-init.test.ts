@@ -172,13 +172,16 @@ describe("runInit CLI auth", () => {
 
   it("does not ask about auth method when the CLI adapter isn't installed", async () => {
     const prompter = fakePrompter({ selectProvider: vi.fn().mockResolvedValue(ANTHROPIC) });
-    const runCommand: RunCommand = vi
-      .fn()
-      .mockImplementation((cmd: string, args: string[]) =>
-        args[0] === "--version"
-          ? { status: null, stdout: "", stderr: "", error: Object.assign(new Error("ENOENT"), { code: "ENOENT" }) }
-          : { status: 0, stdout: "Added", stderr: "" },
-      );
+    const runCommand: RunCommand = vi.fn().mockImplementation((cmd: string, args: string[]) =>
+      args[0] === "--version"
+        ? {
+            status: null,
+            stdout: "",
+            stderr: "",
+            error: Object.assign(new Error("ENOENT"), { code: "ENOENT" }),
+          }
+        : { status: 0, stdout: "Added", stderr: "" },
+    );
 
     await runInit({ prompter, runCommand });
 
@@ -193,7 +196,9 @@ describe("runInit CLI auth", () => {
     const runCommand: RunCommand = vi
       .fn()
       .mockImplementation((cmd: string, args: string[]) =>
-        args[0] === "--version" ? { status: 0, stdout: "1.0.0", stderr: "" } : { status: 0, stdout: "Added", stderr: "" },
+        args[0] === "--version"
+          ? { status: 0, stdout: "1.0.0", stderr: "" }
+          : { status: 0, stdout: "Added", stderr: "" },
       );
 
     const result = await runInit({ prompter, runCommand });
@@ -216,7 +221,9 @@ describe("runInit CLI auth", () => {
     const runCommand: RunCommand = vi
       .fn()
       .mockImplementation((cmd: string, args: string[]) =>
-        args[0] === "--version" ? { status: 0, stdout: "1.0.0", stderr: "" } : { status: 0, stdout: "Added", stderr: "" },
+        args[0] === "--version"
+          ? { status: 0, stdout: "1.0.0", stderr: "" }
+          : { status: 0, stdout: "Added", stderr: "" },
       );
 
     const result = await runInit({ prompter, runCommand });
@@ -261,7 +268,9 @@ describe("runInit smoke test", () => {
   it("never runs a smoke test when the add command itself failed", async () => {
     const prompter = fakePrompter({ confirmSmokeTest: vi.fn().mockResolvedValue(true) });
     const criticFn = vi.fn();
-    const runCommand: RunCommand = vi.fn().mockReturnValue({ status: 1, stdout: "", stderr: "already exists" });
+    const runCommand: RunCommand = vi
+      .fn()
+      .mockReturnValue({ status: 1, stdout: "", stderr: "already exists" });
 
     const result = await runInit({ prompter, runCommand, criticFn });
 

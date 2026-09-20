@@ -3,7 +3,12 @@ import { CriticError, critique } from "../../src/client/critic-client.js";
 import type { CliCriticConfig } from "../../src/client/cli-critique.js";
 import type { RunCliCommand } from "../../src/client/cli-run.js";
 
-const config = { mode: "http" as const, baseUrl: "https://example.test/v1", apiKey: "key", model: "test-model" };
+const config = {
+  mode: "http" as const,
+  baseUrl: "https://example.test/v1",
+  apiKey: "key",
+  model: "test-model",
+};
 const request = {
   systemPrompt: "You are a critic.",
   artifact: "const x = 1",
@@ -224,7 +229,12 @@ describe("critique dispatch", () => {
     });
     const fetchImpl = vi.fn();
 
-    const result = await critique(cliConfig, request, fetchImpl as unknown as typeof fetch, runCliCommand);
+    const result = await critique(
+      cliConfig,
+      request,
+      fetchImpl as unknown as typeof fetch,
+      runCliCommand,
+    );
 
     expect(result.summary).toBe("cli ok");
     expect(fetchImpl).not.toHaveBeenCalled();

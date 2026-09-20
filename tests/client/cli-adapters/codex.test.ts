@@ -35,10 +35,12 @@ describe("runCodexCli", () => {
   });
 
   it("writes the schema file before invoking codex", () => {
-    const runCommand: RunCliCommand = vi.fn().mockImplementation((_cmd, _args, _timeoutMs, cwd: string) => {
-      writeFileSync(join(cwd, "output.json"), JSON.stringify({ issues: [], summary: "ok" }));
-      return { status: 0, stdout: "", stderr: "" };
-    });
+    const runCommand: RunCliCommand = vi
+      .fn()
+      .mockImplementation((_cmd, _args, _timeoutMs, cwd: string) => {
+        writeFileSync(join(cwd, "output.json"), JSON.stringify({ issues: [], summary: "ok" }));
+        return { status: 0, stdout: "", stderr: "" };
+      });
 
     runCodexCli(request, undefined, false, scratchDir, 120_000, runCommand);
 
@@ -49,7 +51,9 @@ describe("runCodexCli", () => {
 
   it("reports notFound when codex isn't on PATH", () => {
     const enoent = Object.assign(new Error("spawn codex ENOENT"), { code: "ENOENT" });
-    const runCommand: RunCliCommand = vi.fn().mockReturnValue({ status: null, stdout: "", stderr: "", error: enoent });
+    const runCommand: RunCliCommand = vi
+      .fn()
+      .mockReturnValue({ status: null, stdout: "", stderr: "", error: enoent });
 
     const outcome = runCodexCli(request, undefined, false, scratchDir, 120_000, runCommand);
 
@@ -57,7 +61,9 @@ describe("runCodexCli", () => {
   });
 
   it("reports exitError on a non-zero exit", () => {
-    const runCommand: RunCliCommand = vi.fn().mockReturnValue({ status: 1, stdout: "", stderr: "not logged in" });
+    const runCommand: RunCliCommand = vi
+      .fn()
+      .mockReturnValue({ status: 1, stdout: "", stderr: "not logged in" });
 
     const outcome = runCodexCli(request, undefined, false, scratchDir, 120_000, runCommand);
 
@@ -79,8 +85,13 @@ describe("runCodexCli", () => {
   });
 
   it("does not read a stale output.json left over from a previous retry attempt", () => {
-    writeFileSync(join(scratchDir, "output.json"), JSON.stringify({ issues: [], summary: "stale from attempt 1" }));
-    const runCommand: RunCliCommand = vi.fn().mockReturnValue({ status: 0, stdout: "", stderr: "" });
+    writeFileSync(
+      join(scratchDir, "output.json"),
+      JSON.stringify({ issues: [], summary: "stale from attempt 1" }),
+    );
+    const runCommand: RunCliCommand = vi
+      .fn()
+      .mockReturnValue({ status: 0, stdout: "", stderr: "" });
 
     const outcome = runCodexCli(request, undefined, true, scratchDir, 120_000, runCommand);
 
@@ -89,7 +100,9 @@ describe("runCodexCli", () => {
   });
 
   it("reports exitError when codex exits 0 but never writes the output file", () => {
-    const runCommand: RunCliCommand = vi.fn().mockReturnValue({ status: 0, stdout: "", stderr: "" });
+    const runCommand: RunCliCommand = vi
+      .fn()
+      .mockReturnValue({ status: 0, stdout: "", stderr: "" });
 
     const outcome = runCodexCli(request, undefined, false, scratchDir, 120_000, runCommand);
 
@@ -97,10 +110,12 @@ describe("runCodexCli", () => {
   });
 
   it("returns parsed:null when the output file contains malformed JSON", () => {
-    const runCommand: RunCliCommand = vi.fn().mockImplementation((_cmd, _args, _timeoutMs, cwd: string) => {
-      writeFileSync(join(cwd, "output.json"), "not json");
-      return { status: 0, stdout: "", stderr: "" };
-    });
+    const runCommand: RunCliCommand = vi
+      .fn()
+      .mockImplementation((_cmd, _args, _timeoutMs, cwd: string) => {
+        writeFileSync(join(cwd, "output.json"), "not json");
+        return { status: 0, stdout: "", stderr: "" };
+      });
 
     const outcome = runCodexCli(request, undefined, false, scratchDir, 120_000, runCommand);
 

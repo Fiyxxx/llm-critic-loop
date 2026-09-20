@@ -11,7 +11,9 @@ describe("runClaudeCli", () => {
       structured_output: { issues: [], summary: "Looks good." },
       result: '{"issues":[],"summary":"Looks good."}',
     });
-    const runCommand: RunCliCommand = vi.fn().mockReturnValue({ status: 0, stdout: envelope, stderr: "" });
+    const runCommand: RunCliCommand = vi
+      .fn()
+      .mockReturnValue({ status: 0, stdout: envelope, stderr: "" });
 
     const outcome = runClaudeCli(request, undefined, false, "/tmp/scratch", 120_000, runCommand);
 
@@ -20,7 +22,9 @@ describe("runClaudeCli", () => {
 
   it("falls back to parsing the result string when structured_output is absent", () => {
     const envelope = JSON.stringify({ result: '{"issues":[],"summary":"ok"}' });
-    const runCommand: RunCliCommand = vi.fn().mockReturnValue({ status: 0, stdout: envelope, stderr: "" });
+    const runCommand: RunCliCommand = vi
+      .fn()
+      .mockReturnValue({ status: 0, stdout: envelope, stderr: "" });
 
     const outcome = runClaudeCli(request, undefined, false, "/tmp/scratch", 120_000, runCommand);
 
@@ -29,7 +33,9 @@ describe("runClaudeCli", () => {
 
   it("reports notFound when claude isn't on PATH", () => {
     const enoent = Object.assign(new Error("spawn claude ENOENT"), { code: "ENOENT" });
-    const runCommand: RunCliCommand = vi.fn().mockReturnValue({ status: null, stdout: "", stderr: "", error: enoent });
+    const runCommand: RunCliCommand = vi
+      .fn()
+      .mockReturnValue({ status: null, stdout: "", stderr: "", error: enoent });
 
     const outcome = runClaudeCli(request, undefined, false, "/tmp/scratch", 120_000, runCommand);
 
@@ -37,7 +43,9 @@ describe("runClaudeCli", () => {
   });
 
   it("reports exitError on a non-zero exit", () => {
-    const runCommand: RunCliCommand = vi.fn().mockReturnValue({ status: 1, stdout: "", stderr: "auth error" });
+    const runCommand: RunCliCommand = vi
+      .fn()
+      .mockReturnValue({ status: 1, stdout: "", stderr: "auth error" });
 
     const outcome = runClaudeCli(request, undefined, false, "/tmp/scratch", 120_000, runCommand);
 
@@ -59,7 +67,9 @@ describe("runClaudeCli", () => {
   });
 
   it("returns parsed:null on malformed stdout", () => {
-    const runCommand: RunCliCommand = vi.fn().mockReturnValue({ status: 0, stdout: "not json", stderr: "" });
+    const runCommand: RunCliCommand = vi
+      .fn()
+      .mockReturnValue({ status: 0, stdout: "not json", stderr: "" });
 
     const outcome = runClaudeCli(request, undefined, false, "/tmp/scratch", 120_000, runCommand);
 
@@ -67,9 +77,11 @@ describe("runClaudeCli", () => {
   });
 
   it("passes --model when a model is given, and cwd/timeout through to runCommand", () => {
-    const runCommand: RunCliCommand = vi
-      .fn()
-      .mockReturnValue({ status: 0, stdout: JSON.stringify({ structured_output: { issues: [], summary: "ok" } }), stderr: "" });
+    const runCommand: RunCliCommand = vi.fn().mockReturnValue({
+      status: 0,
+      stdout: JSON.stringify({ structured_output: { issues: [], summary: "ok" } }),
+      stderr: "",
+    });
 
     runClaudeCli(request, "claude-opus-5", false, "/tmp/scratch", 120_000, runCommand);
 
@@ -82,9 +94,11 @@ describe("runClaudeCli", () => {
   });
 
   it("appends the strict JSON instruction to the system prompt on retry", () => {
-    const runCommand: RunCliCommand = vi
-      .fn()
-      .mockReturnValue({ status: 0, stdout: JSON.stringify({ structured_output: { issues: [], summary: "ok" } }), stderr: "" });
+    const runCommand: RunCliCommand = vi.fn().mockReturnValue({
+      status: 0,
+      stdout: JSON.stringify({ structured_output: { issues: [], summary: "ok" } }),
+      stderr: "",
+    });
 
     runClaudeCli(request, undefined, true, "/tmp/scratch", 120_000, runCommand);
 

@@ -9,7 +9,8 @@ import {
 } from "../client/critic-client.js";
 
 const SMOKE_TEST_REQUEST: CriticRequest = {
-  systemPrompt: "You are a terse code critic. Reply with an empty issues array and a one-sentence summary.",
+  systemPrompt:
+    "You are a terse code critic. Reply with an empty issues array and a one-sentence summary.",
   artifact: "const x = 1;",
 };
 
@@ -52,7 +53,18 @@ export function buildAddCommand(params: BuildAddCommandParams): string[] {
           `CRITIC_MODEL=${params.model}`,
         ];
 
-  return ["mcp", "add", "critic", ...envArgs, "-s", params.scope, "--", "npx", "-y", "llm-critic-loop"];
+  return [
+    "mcp",
+    "add",
+    "critic",
+    ...envArgs,
+    "-s",
+    params.scope,
+    "--",
+    "npx",
+    "-y",
+    "llm-critic-loop",
+  ];
 }
 
 export interface Prompter {
@@ -130,8 +142,11 @@ export async function runInit(deps: InitDeps = {}): Promise<InitResult> {
   const provider = await prompter.selectProvider(PROVIDERS);
   const baseUrl = provider.baseUrl ?? (await prompter.customBaseUrl());
 
-  const cliAvailable = provider.cliAdapter !== undefined && cliIsAvailable(provider.cliAdapter, runCommand);
-  const authMethod = cliAvailable ? await prompter.authMethod(provider.cliAdapter as "claude" | "codex") : "key";
+  const cliAvailable =
+    provider.cliAdapter !== undefined && cliIsAvailable(provider.cliAdapter, runCommand);
+  const authMethod = cliAvailable
+    ? await prompter.authMethod(provider.cliAdapter as "claude" | "codex")
+    : "key";
   const scope = await prompter.scope();
 
   let addParams: BuildAddCommandParams;
@@ -193,7 +208,11 @@ export function formatInitResult(result: InitResult): string {
   }
 
   if (result.succeeded) {
-    const lines = [result.output ?? "", "", "critic is configured. Restart your MCP client to use it."];
+    const lines = [
+      result.output ?? "",
+      "",
+      "critic is configured. Restart your MCP client to use it.",
+    ];
     if (result.smokeTest) {
       lines.push("", result.smokeTest.message);
     }
@@ -299,7 +318,9 @@ async function getDefaultPrompter(): Promise<Prompter> {
       return choice as "cli" | "key";
     },
     async confirmSmokeTest() {
-      return unwrap(await clack.confirm({ message: "Test the connection now?", initialValue: true }));
+      return unwrap(
+        await clack.confirm({ message: "Test the connection now?", initialValue: true }),
+      );
     },
   };
 }
