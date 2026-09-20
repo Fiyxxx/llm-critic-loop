@@ -1,4 +1,4 @@
-![llm-critic-loop — independent fresh-session review for code and docs](assets/llm-critic-loop-banner.svg)
+![llm-critic-loop — independent fresh-session review for code and docs](assets/llm-critic-loop-banner.png)
 
 # llm-critic-loop
 
