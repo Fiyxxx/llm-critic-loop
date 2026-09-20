@@ -1,23 +1,17 @@
 import type { Issue } from "../core/types.js";
+import { buildUserContent, withStrictJsonInstruction } from "./prompt-shaping.js";
+import { parseResponse, snippet } from "./parse-response.js";
+import { CriticError } from "./types.js";
+import type { CriticRequest, CriticResponse } from "./types.js";
+
+export { CriticError } from "./types.js";
+export type { CriticRequest, CriticResponse } from "./types.js";
 
 export interface CriticClientConfig {
   baseUrl: string;
   apiKey: string;
   model: string;
 }
-
-export interface CriticRequest {
-  systemPrompt: string;
-  artifact: string;
-  context?: string;
-}
-
-export interface CriticResponse {
-  issues: Issue[];
-  summary: string;
-}
-
-export class CriticError extends Error {}
 
 type FetchLike = typeof fetch;
 
@@ -30,82 +24,11 @@ type FetchLike = typeof fetch;
 const REQUEST_TIMEOUT_MS = 60_000;
 
 function buildMessages(request: CriticRequest, strict: boolean) {
-  const systemPrompt = strict
-    ? `${request.systemPrompt}\n\nRespond with ONLY valid JSON matching this shape, no prose, no markdown fences: {"issues":[{"category":string,"severity":"minor"|"major"|"critical","description":string,"location"?:string}],"summary":string}`
-    : request.systemPrompt;
-
+  const systemPrompt = withStrictJsonInstruction(request.systemPrompt, strict);
   return [
     { role: "system", content: systemPrompt },
-    {
-      role: "user",
-      content: request.context
-        ? `Context:\n${request.context}\n\nArtifact:\n${request.artifact}`
-        : `Artifact:\n${request.artifact}`,
-    },
+    { role: "user", content: buildUserContent(request) },
   ];
-}
-
-const SEVERITIES: readonly string[] = ["minor", "major", "critical"];
-
-/**
- * Every issue element must be fully shaped before we hand it to `core` —
- * downstream dedup calls `.toLowerCase()` on `description`, so an element
- * missing that field would throw a raw TypeError outside the handler's
- * catch and destroy the returned history blob.
- */
-function isValidIssue(value: unknown): value is Issue {
-  if (typeof value !== "object" || value === null) return false;
-  const issue = value as Record<string, unknown>;
-  if (typeof issue.category !== "string" || issue.category.trim() === "") return false;
-  if (typeof issue.severity !== "string" || !SEVERITIES.includes(issue.severity)) return false;
-  if (typeof issue.description !== "string" || issue.description.trim() === "") return false;
-  if (issue.location !== undefined && typeof issue.location !== "string") return false;
-  return true;
-}
-
-/**
- * Rebuild the issue from only the fields we declare, dropping anything extra
- * the critic invented. The tool's MCP outputSchema is generated with
- * `additionalProperties: false`, and MCP clients validate structuredContent
- * against it strictly — so passing a stray field straight through from model
- * output would fail the call on the client side.
- */
-function normalizeIssue(issue: Issue): Issue {
-  return {
-    category: issue.category,
-    severity: issue.severity,
-    description: issue.description,
-    ...(issue.location !== undefined ? { location: issue.location } : {}),
-  };
-}
-
-function parseResponse(raw: string): CriticResponse | null {
-  try {
-    const parsed = JSON.parse(raw);
-    if (
-      parsed &&
-      Array.isArray(parsed.issues) &&
-      typeof parsed.summary === "string" &&
-      parsed.issues.every(isValidIssue)
-    ) {
-      return {
-        issues: (parsed.issues as Issue[]).map(normalizeIssue),
-        summary: parsed.summary as string,
-      };
-    }
-  } catch {
-    // fall through
-  }
-  return null;
-}
-
-const ERROR_SNIPPET_LENGTH = 200;
-
-function snippet(content: string): string {
-  if (content === "") return "(empty)";
-  return content.length > ERROR_SNIPPET_LENGTH
-    ? `${content.slice(0, ERROR_SNIPPET_LENGTH)}...`
-    : content;
 }
 
 export async function critique(
