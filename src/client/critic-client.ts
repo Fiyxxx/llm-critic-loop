@@ -2,15 +2,14 @@ import { buildUserContent, withStrictJsonInstruction } from "./prompt-shaping.js
 import { parseResponse, snippet } from "./parse-response.js";
 import { CriticError } from "./types.js";
 import type { CriticRequest, CriticResponse } from "./types.js";
+import type { CriticConfig } from "../core/types.js";
+import { cliCritique } from "./cli-critique.js";
+import { defaultRunCliCommand, type RunCliCommand } from "./cli-run.js";
 
 export { CriticError } from "./types.js";
 export type { CriticRequest, CriticResponse } from "./types.js";
 
-export interface CriticClientConfig {
-  baseUrl: string;
-  apiKey: string;
-  model: string;
-}
+export type CriticClientConfig = CriticConfig;
 
 type FetchLike = typeof fetch;
 
@@ -30,8 +29,8 @@ function buildMessages(request: CriticRequest, strict: boolean) {
   ];
 }
 
-export async function critique(
-  config: CriticClientConfig,
+async function httpCritique(
+  config: { baseUrl: string; apiKey: string; model: string },
   request: CriticRequest,
   fetchImpl: FetchLike = fetch,
 ): Promise<CriticResponse> {
@@ -78,4 +77,16 @@ export async function critique(
   throw new CriticError(
     `Critic returned non-conforming output after retry. Last response content: ${snippet(lastContent)}`,
   );
+}
+
+export async function critique(
+  config: CriticClientConfig,
+  request: CriticRequest,
+  fetchImpl: FetchLike = fetch,
+  runCliCommand: RunCliCommand = defaultRunCliCommand,
+): Promise<CriticResponse> {
+  if (config.mode === "cli") {
+    return cliCritique(config, request, runCliCommand);
+  }
+  return httpCritique(config, request, fetchImpl);
 }

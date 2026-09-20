@@ -1,5 +1,7 @@
 import { describe, expect, it, vi } from "vitest";
 import { CriticError, critique } from "../../src/client/critic-client.js";
+import type { CliCriticConfig } from "../../src/client/cli-critique.js";
+import type { RunCliCommand } from "../../src/client/cli-run.js";
 
 const config = { mode: "http" as const, baseUrl: "https://example.test/v1", apiKey: "key", model: "test-model" };
 const request = {
@@ -209,5 +211,22 @@ describe("critique", () => {
       CriticError,
     );
     expect(fetchImpl).toHaveBeenCalledTimes(1);
+  });
+});
+
+describe("critique dispatch", () => {
+  it("dispatches to the CLI backend when config.mode is 'cli', without touching fetch", async () => {
+    const cliConfig: CliCriticConfig = { mode: "cli", cli: "claude" };
+    const runCliCommand: RunCliCommand = vi.fn().mockReturnValue({
+      status: 0,
+      stdout: JSON.stringify({ structured_output: { issues: [], summary: "cli ok" } }),
+      stderr: "",
+    });
+    const fetchImpl = vi.fn();
+
+    const result = await critique(cliConfig, request, fetchImpl as unknown as typeof fetch, runCliCommand);
+
+    expect(result.summary).toBe("cli ok");
+    expect(fetchImpl).not.toHaveBeenCalled();
   });
 });
