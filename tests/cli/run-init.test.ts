@@ -33,6 +33,7 @@ function fakePrompter(overrides: Partial<Prompter> = {}): Prompter {
     apiKey: vi.fn().mockResolvedValue("sk-test"),
     scope: vi.fn().mockResolvedValue("local"),
     authMethod: vi.fn().mockResolvedValue("key"),
+    confirmSmokeTest: vi.fn().mockResolvedValue(false),
     ...overrides,
   };
 }
@@ -220,5 +221,50 @@ describe("runInit CLI auth", () => {
 
     expect(prompter.apiKey).toHaveBeenCalled();
     expect(result.args).toContain("CRITIC_BASE_URL=https://api.anthropic.com/v1");
+  });
+});
+
+describe("runInit smoke test", () => {
+  it("does not run a smoke test when the user declines", async () => {
+    const prompter = fakePrompter({ confirmSmokeTest: vi.fn().mockResolvedValue(false) });
+    const criticFn = vi.fn();
+
+    const result = await runInit({ prompter, runCommand: succeedingRunCommand, criticFn });
+
+    expect(criticFn).not.toHaveBeenCalled();
+    expect(result.smokeTest).toBeUndefined();
+  });
+
+  it("runs a smoke test and reports success when the user accepts", async () => {
+    const prompter = fakePrompter({ confirmSmokeTest: vi.fn().mockResolvedValue(true) });
+    const criticFn = vi.fn().mockResolvedValue({ issues: [], summary: "ok" });
+
+    const result = await runInit({ prompter, runCommand: succeedingRunCommand, criticFn });
+
+    expect(criticFn).toHaveBeenCalledTimes(1);
+    expect(result.smokeTest).toEqual({ ok: true, message: "Connection test succeeded." });
+  });
+
+  it("reports smoke-test failure without failing the overall init result", async () => {
+    const prompter = fakePrompter({ confirmSmokeTest: vi.fn().mockResolvedValue(true) });
+    const criticFn = vi.fn().mockRejectedValue(new Error("boom"));
+
+    const result = await runInit({ prompter, runCommand: succeedingRunCommand, criticFn });
+
+    expect(result.succeeded).toBe(true);
+    expect(result.smokeTest?.ok).toBe(false);
+    expect(result.smokeTest?.message).toContain("boom");
+  });
+
+  it("never runs a smoke test when the add command itself failed", async () => {
+    const prompter = fakePrompter({ confirmSmokeTest: vi.fn().mockResolvedValue(true) });
+    const criticFn = vi.fn();
+    const runCommand: RunCommand = vi.fn().mockReturnValue({ status: 1, stdout: "", stderr: "already exists" });
+
+    const result = await runInit({ prompter, runCommand, criticFn });
+
+    expect(prompter.confirmSmokeTest).not.toHaveBeenCalled();
+    expect(criticFn).not.toHaveBeenCalled();
+    expect(result.smokeTest).toBeUndefined();
   });
 });

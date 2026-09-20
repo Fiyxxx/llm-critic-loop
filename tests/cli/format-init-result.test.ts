@@ -35,4 +35,27 @@ describe("formatInitResult", () => {
     expect(message.toLowerCase()).toContain("claude");
     expect(message).toContain("claude mcp add critic -s local");
   });
+
+  it("includes the smoke test message on success when present", () => {
+    const message = formatInitResult({
+      args: ["mcp", "add", "critic"],
+      ran: true,
+      succeeded: true,
+      output: "Added critic",
+      smokeTest: { ok: true, message: "Connection test succeeded." },
+    });
+
+    expect(message).toContain("Connection test succeeded.");
+  });
+
+  it("omits any smoke test section when none was run", () => {
+    const message = formatInitResult({
+      args: ["mcp", "add", "critic"],
+      ran: true,
+      succeeded: true,
+      output: "Added critic",
+    });
+
+    expect(message).not.toContain("Connection test");
+  });
 });

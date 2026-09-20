@@ -1,5 +1,17 @@
 import { spawnSync } from "node:child_process";
 import { PROVIDERS, type ProviderPreset } from "./providers.js";
+import {
+  CriticError,
+  critique as defaultCritique,
+  type CriticClientConfig,
+  type CriticRequest,
+  type CriticResponse,
+} from "../client/critic-client.js";
+
+const SMOKE_TEST_REQUEST: CriticRequest = {
+  systemPrompt: "You are a terse code critic. Reply with an empty issues array and a one-sentence summary.",
+  artifact: "const x = 1;",
+};
 
 export type Scope = "local" | "user";
 
@@ -51,6 +63,7 @@ export interface Prompter {
   apiKey(): Promise<string>;
   scope(): Promise<Scope>;
   authMethod(cli: "claude" | "codex"): Promise<"cli" | "key">;
+  confirmSmokeTest(): Promise<boolean>;
 }
 
 export interface CommandResult {
@@ -65,6 +78,7 @@ export type RunCommand = (cmd: string, args: string[]) => CommandResult;
 export interface InitDeps {
   prompter?: Prompter;
   runCommand?: RunCommand;
+  criticFn?: (config: CriticClientConfig, request: CriticRequest) => Promise<CriticResponse>;
 }
 
 export interface InitResult {
@@ -72,6 +86,26 @@ export interface InitResult {
   ran: boolean;
   succeeded?: boolean;
   output?: string;
+  smokeTest?: { ok: boolean; message: string };
+}
+
+function configFromAddParams(params: BuildAddCommandParams): CriticClientConfig {
+  return params.authMode === "cli"
+    ? { mode: "cli", cli: params.cli, model: params.model }
+    : { mode: "http", baseUrl: params.baseUrl, apiKey: params.apiKey, model: params.model };
+}
+
+async function runSmokeTest(
+  addParams: BuildAddCommandParams,
+  criticFn: (config: CriticClientConfig, request: CriticRequest) => Promise<CriticResponse>,
+): Promise<{ ok: boolean; message: string }> {
+  try {
+    await criticFn(configFromAddParams(addParams), SMOKE_TEST_REQUEST);
+    return { ok: true, message: "Connection test succeeded." };
+  } catch (error) {
+    const message = error instanceof CriticError ? error.message : String(error);
+    return { ok: false, message: `Connection test failed: ${message}` };
+  }
 }
 
 function defaultRunCommand(cmd: string, args: string[]): CommandResult {
@@ -125,11 +159,19 @@ export async function runInit(deps: InitDeps = {}): Promise<InitResult> {
     return { args, ran: false };
   }
 
+  const succeeded = result.status === 0;
+  let smokeTest: { ok: boolean; message: string } | undefined;
+  if (succeeded && (await prompter.confirmSmokeTest())) {
+    const criticFn = deps.criticFn ?? defaultCritique;
+    smokeTest = await runSmokeTest(addParams, criticFn);
+  }
+
   return {
     args,
     ran: true,
-    succeeded: result.status === 0,
+    succeeded,
     output: `${result.stdout}${result.stderr}`,
+    smokeTest,
   };
 }
 
@@ -146,11 +188,11 @@ export function formatInitResult(result: InitResult): string {
   }
 
   if (result.succeeded) {
-    return [
-      result.output ?? "",
-      "",
-      "critic is configured. Restart your MCP client to use it.",
-    ].join("\n");
+    const lines = [result.output ?? "", "", "critic is configured. Restart your MCP client to use it."];
+    if (result.smokeTest) {
+      lines.push("", result.smokeTest.message);
+    }
+    return lines.join("\n");
   }
 
   return [
@@ -250,6 +292,9 @@ async function getDefaultPrompter(): Promise<Prompter> {
         }),
       );
       return choice as "cli" | "key";
+    },
+    async confirmSmokeTest() {
+      return unwrap(await clack.confirm({ message: "Test the connection now?", initialValue: true }));
     },
   };
 }
