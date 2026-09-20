@@ -161,6 +161,15 @@ moment you see it.
 `cap_reached` / `error`), `issues[]`, `summary`, `round`, `done`, `history`.
 Stop calling once `done` is `true`.
 
+Each issue in `issues[]` carries `category`, `severity`
+(`minor`/`major`/`critical`), `confidence` (`low`/`medium`/`high`),
+`description`, and optionally `suggestion` (a concrete fix, given only when
+the critic is confident of one) and `location`. `low`-confidence issues are
+informational — they still appear in the output, but never by themselves
+turn the verdict into `issues_found` or count toward round-over-round
+staleness, so a critic can flag a hunch honestly without blocking your loop
+on it.
+
 ## Security note
 
 The critic's `summary` and every issue `description` are relayed verbatim

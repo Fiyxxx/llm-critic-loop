@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { evaluateConvergence } from "../../src/core/convergence.js";
+import { countableIssues, evaluateConvergence } from "../../src/core/convergence.js";
 import type { HistoryState, Issue } from "../../src/core/types.js";
 
 const config = { maxRounds: 10, staleThreshold: 0.8 };
@@ -9,6 +9,7 @@ function issue(overrides: Partial<Issue> = {}): Issue {
   return {
     category: "bug",
     severity: "major",
+    confidence: "high",
     description: "off by one error in the loop bound",
     ...overrides,
   };
@@ -70,5 +71,39 @@ describe("evaluateConvergence", () => {
   it("returns issues_found/not done for a normal in-progress round", () => {
     const result = evaluateConvergence([issue()], 1, emptyHistory, config);
     expect(result).toEqual({ verdict: "issues_found", done: false });
+  });
+
+  it("approves when every issue is low confidence", () => {
+    const result = evaluateConvergence([issue({ confidence: "low" })], 1, emptyHistory, config);
+    expect(result).toEqual({ verdict: "approved", done: true });
+  });
+
+  it("ignores low-confidence issues when deciding the verdict alongside real ones", () => {
+    const issues = [
+      issue({ confidence: "low", description: "might be a race condition here" }),
+      issue({ confidence: "high", severity: "critical" }),
+    ];
+    const result = evaluateConvergence(issues, 1, emptyHistory, config);
+    expect(result).toEqual({ verdict: "issues_found", done: false });
+  });
+
+  it("does not let a low-confidence issue block minor-only auto-accept from round 2", () => {
+    const issues = [
+      issue({ confidence: "low", severity: "critical", description: "unverified hunch" }),
+      issue({ confidence: "high", severity: "minor" }),
+    ];
+    const result = evaluateConvergence(issues, 2, emptyHistory, config);
+    expect(result).toEqual({ verdict: "issues_found", done: true });
+  });
+});
+
+describe("countableIssues", () => {
+  it("filters out low-confidence issues, keeping medium and high", () => {
+    const issues = [
+      issue({ confidence: "low" }),
+      issue({ confidence: "medium" }),
+      issue({ confidence: "high" }),
+    ];
+    expect(countableIssues(issues)).toEqual([issues[1], issues[2]]);
   });
 });

@@ -7,7 +7,7 @@ export function buildUserContent(request: CriticRequest): string {
 }
 
 const STRICT_JSON_INSTRUCTION =
-  '\n\nRespond with ONLY valid JSON matching this shape, no prose, no markdown fences: {"issues":[{"category":string,"severity":"minor"|"major"|"critical","description":string,"location"?:string}],"summary":string}';
+  '\n\nRespond with ONLY valid JSON matching this shape, no prose, no markdown fences: {"issues":[{"category":string,"severity":"minor"|"major"|"critical","confidence":"low"|"medium"|"high","description":string,"suggestion"?:string,"location"?:string}],"summary":string}';
 
 export function withStrictJsonInstruction(systemPrompt: string, strict: boolean): string {
   return strict ? `${systemPrompt}${STRICT_JSON_INSTRUCTION}` : systemPrompt;

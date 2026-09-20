@@ -1,9 +1,13 @@
 export type Severity = "minor" | "major" | "critical";
 
+export type Confidence = "low" | "medium" | "high";
+
 export interface Issue {
   category: string;
   severity: Severity;
+  confidence: Confidence;
   description: string;
+  suggestion?: string;
   location?: string;
 }
 

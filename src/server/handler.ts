@@ -6,7 +6,7 @@ import {
   critique as defaultCritique,
 } from "../client/critic-client.js";
 import { decodeHistory, encodeHistory } from "../core/history.js";
-import { evaluateConvergence } from "../core/convergence.js";
+import { countableIssues, evaluateConvergence } from "../core/convergence.js";
 import {
   DEFAULT_CONVERGENCE_CONFIG,
   type ConvergenceConfig,
@@ -77,7 +77,10 @@ export async function handleCritic(input: CriticInput, deps: HandlerDeps): Promi
   const { verdict, done } = evaluateConvergence(response.issues, round, history, config);
   const newHistory = encodeHistory({
     round,
-    issueDigests: [...history.issueDigests, ...response.issues.map((i) => i.description)],
+    issueDigests: [
+      ...history.issueDigests,
+      ...countableIssues(response.issues).map((i) => i.description),
+    ],
   });
 
   return {

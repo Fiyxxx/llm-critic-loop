@@ -58,7 +58,9 @@ describe("handleCritic", () => {
         {
           category: "error-handling",
           severity: "major",
+          confidence: "high",
           description: "no null check on the parsed value",
+          suggestion: "add a null check before dereferencing",
           location: "line 3",
         },
       ],

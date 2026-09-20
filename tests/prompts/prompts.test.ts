@@ -25,6 +25,7 @@ describe("category taxonomy", () => {
       "performance",
       "error-handling",
       "test-coverage",
+      "architecture",
       "style",
     ]);
   });
