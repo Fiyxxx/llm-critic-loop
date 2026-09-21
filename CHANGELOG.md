@@ -6,6 +6,14 @@ adheres to [Semantic Versioning](https://semver.org/) once it reaches 1.0.
 
 ## [Unreleased]
 
+### Fixed
+
+- README's stop-condition rule ("`done` is `true` on every verdict except
+  `issues_found`") was wrong: from round 2 onward, an all-minor issue set is
+  accepted with `verdict: "issues_found"` and `done: true`. Docs now tell
+  integrators to check `done`, not `verdict`, to decide whether to loop
+  again. Found by an independent code review.
+
 ## [0.2.0] - 2026-09-21
 
 ### Added

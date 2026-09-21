@@ -153,9 +153,9 @@ or your client's equivalent):
 
 ```markdown
 After writing or editing code, call the `critic` tool (mode: "code") on
-what changed. If the verdict is "issues_found", fix the issues and call
-`critic` again — pass `round` incremented by one and the `history` value
-from the previous response. Stop once `done` is true.
+what changed. Check `done` first: stop once it's true. If it's false, fix
+the issues in `issues[]` and call `critic` again — pass `round` incremented
+by one and the `history` value from the previous response.
 ```
 
 That's the whole loop: your agent is the creator, `critic` is the reviewer,
@@ -211,14 +211,18 @@ Convergence is decided from that history, not by asking the critic to
 grade itself:
 
 - **`approved`** — this round found zero (countable) issues
-- **`issues_found`** — real, new problems to go fix
+- **`issues_found`** — real, new problems to go fix, **except**: from round
+  2 onward, if every remaining issue is `minor`, it's accepted as-is —
+  `verdict` is still `issues_found` but `done` is already `true`, so it's
+  not worth another round chasing polish
 - **`stale`** — the critic's issues this round overlap the prior round's
   above a word-fraction threshold (default 0.8): it's repeating itself,
   not finding anything new
 - **`cap_reached`** — hit `maxRounds` (default 10) without converging
 
-`done` is `true` on every verdict except `issues_found`. Stop calling the
-moment you see it.
+Always check `done`, not `verdict`, to decide whether to keep looping —
+`issues_found` doesn't always mean "call again," for the minor-only case
+above. Stop calling the moment `done` is `true`.
 
 ## Running two critics for one review
 
