@@ -168,7 +168,25 @@ the critic is confident of one) and `location`. `low`-confidence issues are
 informational — they still appear in the output, but never by themselves
 turn the verdict into `issues_found` or count toward round-over-round
 staleness, so a critic can flag a hunch honestly without blocking your loop
-on it.
+on it. Every issue is also expected to point at the specific text in the
+artifact that backs it, in `location` — a claim with no anchor is a guess,
+and the critic is instructed to mark those `low` confidence rather than
+presenting them as verified.
+
+## Running two critics for one review
+
+`llm-critic-loop` doesn't run an ensemble for you — it's one tool, one
+critic per call, by design. But nothing stops you from calling it twice
+with different `config`s (e.g. two different `CRITIC_MODEL`s, or one HTTP
+and one CLI) and merging the results yourself. Different models miss
+different things, so two independent critiques on the same artifact
+regularly surface largely non-overlapping issues. If you want more
+coverage, that's the pattern: two calls at your orchestration layer, not a
+feature inside the tool.
+
+Pick a fast model for the critic if you're iterating in a tight loop —
+review latency is entirely the model's, not the server's, and a slow critic
+makes you re-load context on every round just to read its output.
 
 ## Security note
 

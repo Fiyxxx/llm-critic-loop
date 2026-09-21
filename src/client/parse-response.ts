@@ -1,28 +1,45 @@
-import type { Confidence, Issue } from "../core/types.js";
+import type { Confidence, Issue, Severity } from "../core/types.js";
 import type { CriticResponse } from "./types.js";
 
 const SEVERITIES: readonly string[] = ["minor", "major", "critical"];
 const CONFIDENCES: readonly string[] = ["low", "medium", "high"];
 
 /**
+ * What isValidIssue actually guards — deliberately looser than `Issue`.
+ * `confidence` is typed `unknown` because it is NOT validated here: missing
+ * or garbled, either way normalizeIssue defaults it to "medium" below.
+ * Rejecting the whole issue over one field the model may mishandle would
+ * silently hide a real finding, which is worse than a wrong default. Giving
+ * this its own type (instead of casting through `Issue`) means the compiler
+ * catches it if a field is ever read here as validated when it isn't.
+ */
+interface RawIssue {
+  category: string;
+  severity: Severity;
+  description: string;
+  location?: string;
+  suggestion?: string;
+  confidence?: unknown;
+}
+
+/**
  * Every issue element must be fully shaped before we hand it to `core` —
  * downstream dedup calls `.toLowerCase()` on `description`, so an element
  * missing that field would throw a raw TypeError outside the handler's
  * catch and destroy the returned history blob.
- *
- * `confidence` is deliberately not checked here at all — missing OR garbled,
- * either way normalizeIssue defaults it to "medium". Rejecting the whole
- * issue over one field the model may mishandle would silently hide a real
- * finding, which is worse than a wrong default.
  */
-function isValidIssue(value: unknown): value is Issue {
+function isValidIssue(value: unknown): value is RawIssue {
   if (typeof value !== "object" || value === null) return false;
   const issue = value as Record<string, unknown>;
   if (typeof issue.category !== "string" || issue.category.trim() === "") return false;
   if (typeof issue.severity !== "string" || !SEVERITIES.includes(issue.severity)) return false;
   if (typeof issue.description !== "string" || issue.description.trim() === "") return false;
   if (issue.location !== undefined && typeof issue.location !== "string") return false;
-  if (issue.suggestion !== undefined && typeof issue.suggestion !== "string") return false;
+  if (
+    issue.suggestion !== undefined &&
+    (typeof issue.suggestion !== "string" || issue.suggestion.trim() === "")
+  )
+    return false;
   return true;
 }
 
@@ -33,10 +50,9 @@ function isValidIssue(value: unknown): value is Issue {
  * against it strictly — so passing a stray field straight through from model
  * output would fail the call on the client side.
  */
-function normalizeIssue(issue: Issue): Issue {
-  const rawConfidence = (issue as { confidence?: unknown }).confidence;
-  const confidence: Confidence = CONFIDENCES.includes(rawConfidence as string)
-    ? (rawConfidence as Confidence)
+function normalizeIssue(issue: RawIssue): Issue {
+  const confidence: Confidence = CONFIDENCES.includes(issue.confidence as string)
+    ? (issue.confidence as Confidence)
     : "medium";
 
   return {
@@ -57,7 +73,7 @@ export function validateResponse(parsed: unknown): CriticResponse | null {
     typeof (parsed as { summary?: unknown }).summary === "string" &&
     (parsed as { issues: unknown[] }).issues.every(isValidIssue)
   ) {
-    const obj = parsed as { issues: Issue[]; summary: string };
+    const obj = parsed as { issues: RawIssue[]; summary: string };
     return {
       issues: obj.issues.map(normalizeIssue),
       summary: obj.summary,

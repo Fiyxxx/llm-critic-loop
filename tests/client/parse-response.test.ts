@@ -64,6 +64,14 @@ describe("validateResponse", () => {
     });
     expect(result).toBeNull();
   });
+
+  it("rejects a response whose suggestion is an empty string", () => {
+    const result = validateResponse({
+      issues: [{ category: "bug", severity: "major", description: "d", suggestion: "  " }],
+      summary: "s",
+    });
+    expect(result).toBeNull();
+  });
 });
 
 describe("parseResponse", () => {

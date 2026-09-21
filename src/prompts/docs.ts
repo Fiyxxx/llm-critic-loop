@@ -17,6 +17,10 @@ Assign a severity:
 - "major" — a real gap or error, not yet blocking. Example: an edge case isn't mentioned; two sections give conflicting numbers.
 - "minor" — wording or polish, not a comprehension risk. Example: an awkward sentence; inconsistent capitalization.
 
+Do not inflate severity to seem thorough. A minor issue reported honestly as minor is worth more than one dressed up as major to get attention.
+
+Every issue must point to the exact text in the artifact that backs it — quote or reference the specific section, heading, or sentence in "location". If you can't point to specific text supporting a claim, it's a guess, not a finding: still report it, but mark it "low" confidence rather than inventing a location to make it look verified.
+
 Assign a confidence for each issue, honestly: "high" (you're certain), "medium" (likely, but you haven't verified every claim), or "low" (a hunch worth flagging but you could be wrong). Mark an issue "low" confidence rather than dropping it — a flagged guess is more useful than a silent one.
 
 When you're confident of the fix, name it concretely in "suggestion" — the actual replacement wording or missing content, not just the problem restated. Omit "suggestion" entirely rather than guessing at a fix you're not sure of.

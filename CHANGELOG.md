@@ -25,12 +25,26 @@ adheres to [Semantic Versioning](https://semver.org/) once it reaches 1.0.
   without blocking the loop on it.
 - New `architecture` category for `mode: "code"` (unwarranted structural
   complexity — tangled responsibilities, single-caller abstractions).
+- Prompts now require every issue to anchor to specific text in the artifact
+  (`location`) and instruct the critic not to inflate severity to seem
+  thorough; an unanchored claim should be marked `low` confidence instead of
+  presented as verified.
+- README documents running two critics (different `CRITIC_MODEL`s or
+  HTTP + CLI) and merging results yourself for ensemble-style coverage, and
+  notes that review latency is the chosen model's, not the server's.
 
 ### Changed
 
 - MCP tool renamed from `adversarial_critique` to `critic`.
 
 ### Fixed
+
+- `isValidIssue`'s type guard now has its own `RawIssue` type instead of
+  asserting `value is Issue` while leaving `confidence` unchecked — closes a
+  type-soundness gap where code between validation and normalization could
+  read `issue.confidence` as always present when it wasn't.
+- An issue's `suggestion` field is now rejected if it's an empty or
+  whitespace-only string, matching the existing rule for `description`.
 
 - Server-reported version now reads from `package.json` at startup instead of
   a separately hardcoded string, so the two can no longer drift.
