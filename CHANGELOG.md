@@ -6,6 +6,8 @@ adheres to [Semantic Versioning](https://semver.org/) once it reaches 1.0.
 
 ## [Unreleased]
 
+## [0.2.0] - 2026-09-21
+
 ### Added
 
 - `npx llm-critic-loop init`: interactive setup wizard (provider, model,
@@ -13,7 +15,12 @@ adheres to [Semantic Versioning](https://semver.org/) once it reaches 1.0.
   equivalent command if the `claude` CLI isn't on `PATH`. Idempotent:
   rerunning it removes any existing `critic` entry at the chosen scope
   first, so it's also the standard way to change provider, model, key, or
-  scope later.
+  scope later. Offers an optional end-to-end connection smoke test once
+  setup is done.
+- `CRITIC_CLI` config mode (`claude` or `codex`): point critic at your
+  existing `claude`/`codex` CLI login instead of an API key. `CRITIC_MODEL`
+  is optional in this mode; the `init` wizard offers it automatically when
+  it detects the relevant CLI on `PATH`.
 - CI workflow (lint, format check, build, test on Node 18/20/22).
 - ESLint + Prettier tooling (`npm run lint`, `npm run format`).
 - Test coverage reporting (`npm run test:coverage`).
@@ -45,7 +52,6 @@ adheres to [Semantic Versioning](https://semver.org/) once it reaches 1.0.
   read `issue.confidence` as always present when it wasn't.
 - An issue's `suggestion` field is now rejected if it's an empty or
   whitespace-only string, matching the existing rule for `description`.
-
 - Server-reported version now reads from `package.json` at startup instead of
   a separately hardcoded string, so the two can no longer drift.
 - `init` on Node < 20.12 now prints a clear error instead of crashing with a

@@ -18,15 +18,27 @@ revise based on what it finds, and stop the moment it tells you to —
 built-in convergence detection catches both "actually done" and "just
 repeating itself," so the loop can't run forever.
 
+## Features
+
 - 🔍 **Independent, fresh-session review** — no shared context with the
   agent that wrote the artifact, so it can't rationalize its own blind spots
 - 🔌 **Bring your own critic** — any OpenAI-compatible chat-completions
-  endpoint: OpenAI, Anthropic, Gemini, xAI, Groq, Mistral, DeepSeek, or a
-  local model
+  endpoint (OpenAI, Anthropic, Gemini, xAI, Groq, Mistral, DeepSeek, or a
+  local model), or skip the API key entirely and reuse your existing
+  `claude`/`codex` CLI login
 - 🛑 **Built-in convergence** — approve / issues-found / stale-loop /
-  round-cap verdicts, so your agent knows exactly when to stop
+  round-cap verdicts, so your agent knows exactly when to stop, decided
+  from history rather than by asking the critic to grade itself
+- 🧭 **Calibrated, structured findings** — every issue carries a category,
+  a severity, an honest confidence level, and must point at the specific
+  text that backs it, so hunches show up as hunches instead of dressed-up
+  certainty
+- 📝 **Code and docs modes** — the same tool reviews source code or
+  written documentation/planning text, with a taxonomy and prompt tuned
+  for each
 - ⚡ **One-command setup** — `npx llm-critic-loop init` walks you through
-  provider, model, and key, then wires it into your MCP client for you
+  provider, model, and key (or CLI auth), then wires it into your MCP
+  client for you
 
 ## Requirements
 
@@ -35,32 +47,49 @@ setup wizard) additionally requires Node.js >= 20.12, since its interactive
 prompts library needs it; on an older Node it prints a clear error and you
 can fall back to the manual setup below.
 
-## Install
+## Setup
+
+### Quick setup (recommended)
 
 ```bash
 npx -y llm-critic-loop init
 ```
 
-Interactive setup: pick a provider (OpenAI, Anthropic, Gemini, xAI, Groq,
+Interactive wizard: pick a provider (OpenAI, Anthropic, Gemini, xAI, Groq,
 Mistral, DeepSeek, a local model server, or a custom endpoint), pick a model
 from a curated list (or type your own), enter your API key, and choose
 whether to add it for this project or all your projects. If the `claude` CLI
 is on your `PATH`, it runs `claude mcp add` for you; otherwise it prints the
 exact command to paste. Nothing is written to disk — the key only ever goes
-into the command that registers the server.
+into the command that registers the server. It also offers a quick
+end-to-end connection test once setup is done, so you know it actually
+works before you start relying on it.
 
-### Changing provider, model, key, or scope later
+Run the same command again any time you want to switch provider, model, or
+key, or move it from project-only to all-projects — it's idempotent, and
+replaces whatever `critic` config already exists at the scope you pick. No
+need to remove anything first.
 
-Run the same command again:
+### Using your existing `claude` or `codex` login instead of an API key
+
+If you already have [Claude Code](https://claude.com/claude-code) or
+[Codex CLI](https://github.com/openai/codex) installed and logged in
+(subscription or API key, either works), you can skip `CRITIC_BASE_URL`/
+`CRITIC_API_KEY` entirely and point critic at the CLI instead — the `init`
+wizard offers this automatically when it detects the relevant CLI on your
+`PATH`. To do it by hand:
 
 ```bash
-npx -y llm-critic-loop init
+claude mcp add critic -e CRITIC_CLI=claude -e CRITIC_MODEL=claude-opus-5 \
+  -- npx -y llm-critic-loop
 ```
 
-It's idempotent — it replaces whatever `critic` config already exists at
-the scope you pick, so rerunning it is the standard way to switch models,
-rotate a key, or move it from project-only to all-projects. No need to
-remove anything first.
+```bash
+claude mcp add critic -e CRITIC_CLI=codex -- npx -y llm-critic-loop
+```
+
+`CRITIC_CLI` accepts `claude` or `codex`. `CRITIC_MODEL` is optional in this
+mode — omit it to use that CLI's own configured default model.
 
 ### Manual setup
 
@@ -109,26 +138,66 @@ and failing on the first tool call. That is deliberate — a misconfigured
 critic should be obvious immediately, not surface later as a mysterious
 `verdict: "error"`.
 
-### Using your existing `claude` or `codex` login instead of a key
+## Usage
 
-If you already have [Claude Code](https://claude.com/claude-code) or
-[Codex CLI](https://github.com/openai/codex) installed and logged in
-(subscription or API key, either works), you can skip `CRITIC_BASE_URL`/
-`CRITIC_API_KEY` entirely and point critic at the CLI instead:
+You don't call `critic` yourself — your coding agent does, as an MCP tool,
+the same way it calls any other tool it has access to. Once it's registered
+(above), just ask your agent to use it, e.g.:
 
-```bash
-claude mcp add critic -e CRITIC_CLI=claude -e CRITIC_MODEL=claude-opus-5 \
-  -- npx -y llm-critic-loop
+> "Use the critic tool to review the changes you just made, then fix
+> whatever it finds and check again until it's done."
+
+For it to happen automatically instead of on request, add an instruction
+like this to your project's agent instructions file (`CLAUDE.md`, `AGENTS.md`,
+or your client's equivalent):
+
+```markdown
+After writing or editing code, call the `critic` tool (mode: "code") on
+what changed. If the verdict is "issues_found", fix the issues and call
+`critic` again — pass `round` incremented by one and the `history` value
+from the previous response. Stop once `done` is true.
 ```
 
-```bash
-claude mcp add critic -e CRITIC_CLI=codex -- npx -y llm-critic-loop
-```
+That's the whole loop: your agent is the creator, `critic` is the reviewer,
+and the `round`/`history` fields are how the two calls know they're part of
+the same review instead of two unrelated ones.
 
-`CRITIC_CLI` accepts `claude` or `codex`. `CRITIC_MODEL` is optional in this
-mode — omit it to use that CLI's own configured default model. The `init`
-wizard offers this automatically when it detects the relevant CLI on your
-`PATH`.
+## Tool: `critic`
+
+**Input:** `artifact` (the code or docs text to review), `mode` (`"code"`
+or `"docs"`), optional `context` (what the artifact is for, to focus the
+critique), `round` (default 1), `history` (opaque blob from the previous
+call, omit on round 1), optional `config` (`maxRounds` default 10,
+`staleThreshold` default 0.8).
+
+**Output:** `verdict` (`approved` / `issues_found` / `stale` /
+`cap_reached` / `error`), `issues[]`, `summary`, `round`, `done`, `history`.
+Stop calling once `done` is `true`.
+
+Each issue carries:
+
+- `category` — a taxonomy label (see Modes below)
+- `severity` — `minor` / `major` / `critical`
+- `confidence` — `low` / `medium` / `high`, the critic's honest certainty
+- `description` — what's wrong and why it matters
+- `location` — the specific text in the artifact the issue points at
+- `suggestion` (optional) — a concrete fix, given only when the critic is
+  confident of one
+
+`low`-confidence issues are informational: they still appear in `issues[]`,
+but never by themselves turn the verdict into `issues_found` or count
+toward round-over-round staleness, so a critic can flag a hunch honestly
+without blocking your loop on it. Every issue is expected to anchor to
+specific text in the artifact via `location` — a claim with no anchor is a
+guess, and the critic is instructed to mark it `low` confidence rather than
+present it as verified.
+
+### Modes
+
+- **`code`** — categories: `bug`, `security`, `performance`,
+  `error-handling`, `test-coverage`, `architecture`, `style`
+- **`docs`** — categories: `factual-error`, `clarity`, `completeness`,
+  `consistency`, `structure`
 
 ## How it stays fresh — and knows when to stop
 
@@ -141,7 +210,7 @@ never anchors on a judgment it already made.
 Convergence is decided from that history, not by asking the critic to
 grade itself:
 
-- **`approved`** — this round found zero issues
+- **`approved`** — this round found zero (countable) issues
 - **`issues_found`** — real, new problems to go fix
 - **`stale`** — the critic's issues this round overlap the prior round's
   above a word-fraction threshold (default 0.8): it's repeating itself,
@@ -150,28 +219,6 @@ grade itself:
 
 `done` is `true` on every verdict except `issues_found`. Stop calling the
 moment you see it.
-
-## Tool: `critic`
-
-**Input:** `artifact`, `mode` (`"code"` or `"docs"`), optional `context`,
-`round` (default 1), `history` (omit on round 1), optional `config`
-(`maxRounds` default 10, `staleThreshold` default 0.8).
-
-**Output:** `verdict` (`approved` / `issues_found` / `stale` /
-`cap_reached` / `error`), `issues[]`, `summary`, `round`, `done`, `history`.
-Stop calling once `done` is `true`.
-
-Each issue in `issues[]` carries `category`, `severity`
-(`minor`/`major`/`critical`), `confidence` (`low`/`medium`/`high`),
-`description`, and optionally `suggestion` (a concrete fix, given only when
-the critic is confident of one) and `location`. `low`-confidence issues are
-informational — they still appear in the output, but never by themselves
-turn the verdict into `issues_found` or count toward round-over-round
-staleness, so a critic can flag a hunch honestly without blocking your loop
-on it. Every issue is also expected to point at the specific text in the
-artifact that backs it, in `location` — a claim with no anchor is a guess,
-and the critic is instructed to mark those `low` confidence rather than
-presenting them as verified.
 
 ## Running two critics for one review
 

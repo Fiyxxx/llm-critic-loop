@@ -1,6 +1,6 @@
 {
   "name": "llm-critic-loop",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Give your coding agent an adversarial critic: an independent, fresh-session MCP reviewer for code and docs, with built-in convergence and any model you bring.",
   "keywords": [
     "mcp",
